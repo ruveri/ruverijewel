@@ -24,7 +24,7 @@ export default function CategoryBanner() {
     if (window.innerWidth < 768) {
       const timer = setTimeout(() => {
         setShowComponent(true);
-      }, 1000); // 1 second delay
+      }, 2000); // 1 second delay
       return () => clearTimeout(timer);
     } else {
       // Show immediately on desktop

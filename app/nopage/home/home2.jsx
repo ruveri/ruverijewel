@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 const imageZoom = {
   hidden: { scale: 1.5 },
@@ -16,6 +17,23 @@ const imageZoom = {
 };
 
 export default function CategoryBanner() {
+  const [showComponent, setShowComponent] = useState(false);
+
+  useEffect(() => {
+    // Only delay on mobile (screen width < 768px)
+    if (window.innerWidth < 768) {
+      const timer = setTimeout(() => {
+        setShowComponent(true);
+      }, 1000); // 1 second delay
+      return () => clearTimeout(timer);
+    } else {
+      // Show immediately on desktop
+      setShowComponent(true);
+    }
+  }, []);
+
+  if (!showComponent) return null; // Blank screen until state is true
+
   return (
     <section className="w-full grid grid-cols-2 overflow-hidden">
       

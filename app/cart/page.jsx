@@ -1,10 +1,10 @@
-"use client"
-import Cart1 from "../nopage/cart/cart1"
+
+// import Cart1 from "../nopage/cart/cart1"
 
 export default function Page(){
     return(
         <>
-        <Cart1/>
+        {/* <Cart1/> */}
         </>
     )
 }

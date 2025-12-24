@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';

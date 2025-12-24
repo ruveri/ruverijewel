@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { motion } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import Link from "next/link";
@@ -14,7 +15,10 @@ const Skeleton = ({ className }) => (
 );
 
 export default function CartPage() {
-    const { cart, updateQuantity, getTotalItems } = useCart();
+    const cartContext = useCart();
+    if (!cartContext) return null;
+    const { cart, updateQuantity, getTotalItems } = cartContext;
+
     const cartItems = Object.values(cart);
     const [products, setProducts] = useState({});
     const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
-import Home1 from "./nopage/home/home1a";
-import Home2 from "./nopage/home/home1b";
-import Products from "./nopage/home/Products";
+import Home1 from "./nopage/home/home1";
+import Home2 from "./nopage/home/home2";
+// import Products from "./nopage/home/Products";
 
 // export const metadata = {
 //   title: "Personalized Name Jewelry – Custom Necklaces, Pendants & Keychains | Erroneous Gold",
@@ -52,10 +52,11 @@ export default function Home() {
     <>
   
       <Home1  />
+      <Home2/>
     
 
-      {/* <Products category="singlenamenecklace" title="Single Name Necklaces" />
-      <Products category="rakhi" title="Rakhi" />
+      {/* <Products category="singlenamenecklace" title="Single Name Necklaces" /> */}
+      {/* <Products category="rakhi" title="Rakhi" />
       <Products category="couplenamenecklace" title="Couple Name Necklaces" />
       <Products category="keychain" title="Keychains" />
       <Products category="carcharam" title="Car Charam" />

@@ -3,6 +3,19 @@
 @tailwind utilities;
 
 
+
+@font-face {
+  font-family: 'ci';
+  src: url('/fonts/Cinzel-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-size: larger;
+}
+
+.ci {
+  font-family: 'ci', sans-serif;
+}
+
 @font-face {
   font-family: 'playfair';
   src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');

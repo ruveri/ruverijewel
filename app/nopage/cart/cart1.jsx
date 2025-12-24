@@ -16,15 +16,43 @@ const Skeleton = ({ className }) => (
 
 export default function CartPage() {
     const cartContext = useCart();
-    if (!cartContext) return null;
-    const { cart, updateQuantity, getTotalItems } = cartContext;
 
-    const cartItems = Object.values(cart);
-    const [products, setProducts] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [showCheckoutPopup, setShowCheckoutPopup] = useState(false);
+  const [products, setProducts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [showCheckoutPopup, setShowCheckoutPopup] = useState(false);
 
-    // Fetch product details
+  // ✅ Safe fallback (no destructuring crash)
+  const cart = cartContext?.cart || {};
+  const updateQuantity = cartContext?.updateQuantity;
+  const getTotalItems = cartContext?.getTotalItems;
+
+  const cartItems = Object.values(cart);
+// chatgpt suggestion
+// useEffect(() => {
+//     if (!cartItems.length) {
+//       setLoading(false);
+//       return;
+//     }
+
+//     const fetchProducts = async () => {
+//       try {
+//         const productData = {};
+//         for (const item of cartItems) {
+//           const res = await fetch(`/api/products/fetch/${item.id}`);
+//           const data = await res.json();
+//           productData[item.id] = data;
+//         }
+//         setProducts(productData);
+//       } catch (err) {
+//         console.error(err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchProducts();
+//   }, [cartItems]);
+    // my original code 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -46,6 +74,7 @@ export default function CartPage() {
 
         if (cartItems.length > 0) fetchProducts();
     }, [cart]);
+      if (!cartContext) return null;
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);

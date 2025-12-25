@@ -85,7 +85,7 @@ export default function Navbar() {
     }, []);
 
     return (
-        <nav className="w-full z-50 bg-white text-black ci ">
+        <nav className="w-full z-50 bg-[#FFF5F5] text-black ci ">
             <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-center h-0 md:h-16">
 

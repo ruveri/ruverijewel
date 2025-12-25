@@ -35,7 +35,7 @@ export default function CategoryBanner() {
   if (!showComponent) return null; // Blank screen until state is true
 
   return (
-    <section className="w-full grid grid-cols-2 overflow-hidden">
+    <section className="bg-[#FFF5F5] w-full grid grid-cols-2 overflow-hidden">
       
       {/* LEFT BLOCK */}
       <div className="relative h-[30vh] md:h-[70vh] overflow-hidden">

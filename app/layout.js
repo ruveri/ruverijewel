@@ -17,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className=' ci'>
+    <html lang="en" className='bg-[#FFF5F5] ci'>
       <body className={inter.className}>
         <CartProvider>
           <div className=" ">

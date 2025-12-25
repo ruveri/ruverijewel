@@ -28,13 +28,13 @@ export default function JewelryEditorialOverlap() {
                         className="max-w-3xl text-white"
                     >
                         <h1 className="text-[24px] md:text-[44px] font-light tracking-wide text-white">
-                            Explore Our Men's Collection
+                            Explore Our Men&apos;s Collection
                         </h1>
 
                         <p className="mt-4 text-[12px] sm:text-base text-white/90 leading-relaxed">
                             Discover bold and sophisticated pieces designed exclusively for men.
                             From timeless classics to modern statement pieces, elevate your style
-                            with Jullaby's men's collection.
+                            with Jullaby&apos;s men&apos;s collection.
                         </p>
 
 

@@ -1,147 +1,100 @@
-"use client";
 import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { FaFacebookF, FaTwitter, FaInstagram, FaPinterest } from "react-icons/fa";
+import {
+  Instagram,
+  Youtube,
+  Twitter,
+  Facebook,
+} from "lucide-react";
 
-export default function Footer() {
-    return (
+export default function LuxuryFooter() {
+  return (
+    <section className="relative w-full h-[90vh] md:h-[50vh] ci">
+      {/* Background Image */}
+      <Image
+        src="/footer.webp"
+        alt="Luxury Jewelry"
+        fill
+        priority
+        className="object-cover"
+      />
 
-        <footer className="bg-[#FBF9F2] text-black pt-16 border-t-2 mt-10">
-            <div className="container mx-auto  grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-10">
-                {/* Logo + Description */}
-                <motion.div
-                    className="lg:col-span-2 space-y-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* Content */}
+      <div className="relative z-10 h-full max-w-7xl mx-auto px-6 py-12 flex flex-col justify-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-end gap-12">
+
+          {/* LEFT SIDE */}
+          <div className="space-y-6">
+            {/* Social Icons */}
+            <div className="flex gap-4">
+              {[
+                Instagram,
+                Youtube,
+                Twitter,
+                Facebook,
+              ].map((Icon, i) => (
+                <div
+                  key={i}
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black  transition cursor-pointer"
                 >
-                    <Image src="/logo.svg" alt="Erroneous Gold Logo" className="w-36" width={100} height={70} />
-                    <p className="text-gray-800 ml-4">
-                        At Erroneous Gold, we turn your stories into timeless pieces. Every necklace is uniquely crafted to celebrate love, memories, and individuality.
-                    </p>
-                    <p className="text-sm text-gray-600 ml-4">&quot;Wear your story, close to your heart.&quot;</p>
-                </motion.div>
-
-                {/* Policy Links */}
-                <motion.div
-                    className="space-y-4 pl-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                    <h2 className="text-2xl font-semibold">Policy</h2>
-                    <ul className="space-y-2">
-                        {[
-                            "Privacy Policy",
-                            "Terms and Conditions",
-                            "Cancellation and Refund",
-                            "Shipping and Delivery",
-                            "Contact Us",
-                        ].map((link) => (
-                            <li key={link}>
-                                <Link
-                                    href={`/${link.toLowerCase().replace(/ /g, "-")}`}
-                                    className="text-black hover:text-c4 transition-all"
-                                >
-                                    {link}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </motion.div>
-                 <motion.div
-                    className="space-y-4 pl-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                    <h2 className="text-2xl font-semibold">Quick Links</h2>
-                    <ul className="space-y-2">
-                        {[
-                            "About us",
-                            "Shop",
-                          
-                        ].map((link) => (
-                            <li key={link}>
-                                <Link
-                                    href={`/${link.toLowerCase().replace(/ /g, "-")}`}
-                                    className="text-black hover:text-c4 transition-all"
-                                >
-                                    {link}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </motion.div>
-
-                {/* Quick Links */}
-                {/* <motion.div
-                    className="space-y-4 pl-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                >
-                    <h2 className="text-2xl font-semibold">Quick Links</h2>
-                    <ul className="space-y-2">
-                        {["Home", "Shop", "Customize", "FAQs"].map((link) => (
-                            <li key={link}>
-                                <Link
-                                    href={`/${link.toLowerCase()}`}
-                                    className="text-black hover:text-c4 transition-all"
-                                >
-                                    {link}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </motion.div> */}
-
-                {/* Contact Info + Social */}
-                <motion.div
-                    className="space-y-6 pl-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                >
-                    <h2 className="text-2xl font-semibold">Contact</h2>
-                    <p className="text-gray-800 text-sm leading-relaxed">
-                        STREE NO:- 4, PLOT NO: 19 B2, ATIKA INDUSTRIAL AREA , RAJKOT, GUJARAT, INDIA, 360002<br />
-                        <a
-                            href="https://wa.me/917698657879?text=Hi%2C%20I'm%20interested%20in%20your%20jewelry%20collection."
-                            className="text-c4 hover:underline block"
-                        >
-                            📞 +91 76986 57879
-                        </a>
-                        <a
-                            href="mailto:info@erroneousgold.com"
-                            className="text-c4 hover:underline block"
-                        >
-                            ✉️ info@erroneousgold.com
-                        </a>
-                    </p>
-
-                    <div className="flex space-x-4">
-                        {[FaFacebookF, FaInstagram,].map((Icon, index) => (
-                            <motion.a
-                                key={index}
-                                href="#"
-                                className="text-white p-3 rounded-full bg-c4 hover:bg-c1 hover:text-c4 transition-all"
-                                whileHover={{ scale: 1.1 }}
-                            >
-                                <Icon />
-                            </motion.a>
-                        ))}
-                    </div>
-                </motion.div>
+                  <Icon size={18} />
+                </div>
+              ))}
             </div>
 
-            {/* Divider */}
-            <div className="border-t pb-8 bg-c2 rounded-b-xl border-gray-300 mt-10 pt-6 text-center">
-                <p className="text-sm text-gray-600">
-                    © 2025 ERRONEOUS GOLD PRIVATE LIMITED. All rights reserved.
-                </p>
+            {/* Logo Image */}
+            <div className="pt-2">
+              <Image
+                src="/logo.webp" // your logo
+                alt="Brand Logo"
+                width={500}
+                height={60}
+                className="object-contain"
+              />
             </div>
-        </footer>
-    );
+          </div>
+
+          {/* RIGHT SIDE LINKS (Fully Right Aligned) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-black md:justify-self-end text-left">
+            <div>
+              <h4 className="mb-4 uppercase tracking-widest text-md opacity-80">
+                Customer Care
+              </h4>
+              <ul className="space-y-3 text-sm opacity-90">
+                <li className="hover:opacity-70 cursor-pointer">
+                  Book an Appointment
+                </li>
+                <li className="hover:opacity-70 cursor-pointer">
+                  Contact Us
+                </li>
+                <li className="hover:opacity-70 cursor-pointer">
+                  FAQ
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="mb-4 uppercase tracking-widest text-md opacity-80">
+                Information
+              </h4>
+              <ul className="space-y-3 text-sm opacity-90">
+                <li className="hover:opacity-70 cursor-pointer">
+                  Certificates
+                </li>
+                <li className="hover:opacity-70 cursor-pointer">
+                  Privacy Policy
+                </li>
+                <li className="hover:opacity-70 cursor-pointer">
+                  Terms & Conditions
+                </li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
 }

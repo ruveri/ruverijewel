@@ -16,7 +16,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative w-screen h-[60vh] lg:h-[80vh] overflow-hidden bg-[#FFF5F5]">
+    <div className="relative w-screen h-[60vh] lg:h-[80vh] overflow-hidden bg-back">
       <AnimatePresence>
         {show && (
           <motion.div

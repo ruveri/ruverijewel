@@ -32,7 +32,14 @@ export default function CategoryBanner() {
     }
   }, []);
 
-  // if (!showComponent) return null; // Blank screen until state is true
+  if (!showComponent) {
+    return (
+      <section className="w-full grid grid-cols-2 bg-white">
+        <div className="h-[30vh] md:h-[70vh]" />
+        <div className="h-[30vh] md:h-[70vh]" />
+      </section>
+    );
+  } // Blank screen until state is true
 
   return (
     <section className="bg-[#FFF5F5] w-full grid grid-cols-2 overflow-hidden">

@@ -54,7 +54,7 @@ export default function JewelryAutoSlider() {
   };
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#FFF5F5] py-8 md:py-12">
+    <div className="relative w-full overflow-hidden bg-back py-8 md:py-12">
       <motion.div
         className="flex gap-4 sm:gap-6 md:gap-8 w-max"
         style={{ x }}

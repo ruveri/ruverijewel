@@ -7,7 +7,7 @@ const text = "Timeless Fine Jewelry";
 
 export default function Page() {
   return (
-    <nav className="w-full bg-[#FFF5F5]">
+    <nav className="w-full bg-back">
       <div className="mt-4 mb-4 lg:mb-0 flex flex-col items-center justify-center gap-2 px-4">
 
         {/* Tagline – Letter by Letter */}

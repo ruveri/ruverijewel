@@ -34,7 +34,7 @@ export default function CategoryBanner() {
 
   if (!showComponent) {
     return (
-      <section className="w-full grid grid-cols-2 bg-white">
+      <section className="w-full grid grid-cols-2 bg-back">
         <div className="h-[30vh] md:h-[70vh]" />
         <div className="h-[30vh] md:h-[70vh]" />
       </section>
@@ -63,7 +63,7 @@ export default function CategoryBanner() {
 
         {/* Overlay Content */}
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-14 bg-black/10">
-          <h2 className="text-white text-md lg:text-3xl md:text-4xl font-serif tracking-wide mb-4">
+          <h2 className="text-white text-sm lg:text-3xl  font-serif tracking-wide mb-4">
             ENGAGEMENT RINGS
           </h2>
 
@@ -96,7 +96,7 @@ export default function CategoryBanner() {
 
         {/* Overlay Content */}
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-14 bg-black/10">
-          <h2 className="text-white text-md lg:text-3xl md:text-4xl font-serif tracking-wide mb-4">
+          <h2 className="text-white text-sm lg:text-3xl font-serif tracking-wide mb-4">
             DIAMOND EARRINGS
           </h2>
 

@@ -32,7 +32,7 @@ export default function CategoryBanner() {
     }
   }, []);
 
-  if (!showComponent) return null; // Blank screen until state is true
+  // if (!showComponent) return null; // Blank screen until state is true
 
   return (
     <section className="bg-[#FFF5F5] w-full grid grid-cols-2 overflow-hidden">

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 const text = "Timeless Fine Jewelry";
@@ -18,7 +19,7 @@ export default function Page() {
           variants={{
             visible: {
               transition: {
-                staggerChildren: 0.03, // speed between letters
+                staggerChildren: 0.03,
               },
             },
           }}
@@ -41,31 +42,34 @@ export default function Page() {
           ))}
         </motion.p>
 
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            delay: 0.5,   // starts after text finishes
-            duration: 1.2,
-            ease: "easeOut",
-          }}
-          className="
-            w-[70vw] 
-            sm:w-[50vw] 
-            md:w-[50vw] 
-            lg:w-[30vw]
-          "
-        >
-          <Image
-            src="/logo.webp"
-            alt="Jewelry Brand Logo"
-            width={400}
-            height={200}
-            priority
-            className="w-full h-auto"
-          />
-        </motion.div>
+        {/* Logo → Home */}
+        <Link href="/" aria-label="Go to home">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              delay: 0.5,
+              duration: 1.2,
+              ease: "easeOut",
+            }}
+            className="
+              w-[70vw] 
+              sm:w-[50vw] 
+              md:w-[50vw] 
+              lg:w-[30vw]
+              cursor-pointer
+            "
+          >
+            <Image
+              src="/logo.webp"
+              alt="Jewelry Brand Logo"
+              width={400}
+              height={200}
+              priority
+              className="w-full h-auto"
+            />
+          </motion.div>
+        </Link>
 
       </div>
     </nav>

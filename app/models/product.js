@@ -7,14 +7,58 @@ const productSchema = new Schema(
       required: [true, "Product name is required"],
       trim: true,
     },
-    strikeoutPrice: {
+    makingCharges: {
       type: Number,
-      required: [true, "Strikeout price is required"],
+      required: [true, "Making charges are required"],
     },
-    originalPrice: {
+    metalPrice: {
       type: Number,
-      required: [true, "Original price is required"],
+      required: [true, "Metal price is required"],
     },
+
+    // 👉 Weight & Metal Details
+    grossWeight: {
+      type: Number,
+      required: [true, "Gross weight is required"],
+    },
+    netWeight: {
+      type: Number,
+      required: [true, "Net weight is required"],
+    },
+    metal: {
+      type: String,
+      enum: ["gold", "silver"],
+      required: [true, "Metal type is required"],
+    },
+    purity: {
+      type: String,
+      enum: [
+        "14K",
+        "18K",
+        "20K",
+        "22K",
+        "24K",
+        "800 Silver",
+        "900 Silver",
+        "925 Silver",
+        "950 Silver",
+        "999 Silver",
+      ],
+      required: [true, "Purity is required"],
+    },
+
+    // 👉 Updated Fields
+    color: {
+      type: String, // Blank or any text allowed
+      trim: true,
+    },
+    gender: {
+      type: String,
+      enum: ["men", "women", "unisex"],
+      default: "unisex",
+    },
+
+    // 👉 Images
     img1: {
       type: String,
       required: [true, "Image 1 is required"],
@@ -25,43 +69,31 @@ const productSchema = new Schema(
     },
     img3: {
       type: String,
-      required: [true, "Image 3 is required"],
+      required: false,
     },
     img4: {
       type: String,
-      required: [true, "Image 4 is required"],
+      required: false,
     },
+
     description: {
       type: String,
       required: [true, "Description is required"],
       trim: true,
     },
-    material: {
-      type: String,
-      required: [true, "Material is required"],
-      trim: true,
-    },
-    fontName: {
-      type: String,
-      required: [true, "Font name is required"],
-      trim: true,
-    },
-    chain1: {
-      type: String,
-      trim: true,
-    },
-    chain2: {
-      type: String,
-      trim: true,
-    },
-    chain3: {
-      type: String,
-      trim: true,
-    },
     category: {
       type: String,
-      enum: ["singlenamenecklace", "couplenamenecklace", "keychain", "rakhi", "carcharam"],
-      default: "singlenamenecklace",
+      enum: [
+        "bangles",
+        "bracelets",
+        "chains",
+        "earrings",
+        "necklace",
+        "mencollections",
+        "pendents",
+        "rings",
+      ],
+      default: "rings",
     },
     status: {
       type: String,

@@ -4,27 +4,78 @@ import { NextResponse } from "next/server";
 
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
+/* ------------------ PURITY MULTIPLIERS ------------------ */
+const getPurityMultiplier = (metal, purity) => {
+  const goldMap = {
+    "24K": 1,
+    "22K": 0.916,
+    "20K": 0.833,
+    "18K": 0.75,
+    "14K": 0.585,
+  };
+
+  const silverMap = {
+    "999 Silver": 1,
+    "950 Silver": 0.95,
+    "925 Silver": 0.925,
+    "900 Silver": 0.9,
+    "800 Silver": 0.8,
+  };
+
+  if (metal === "gold") return goldMap[purity] || 1;
+  if (metal === "silver") return silverMap[purity] || 1;
+
+  return 1;
+};
+
 export async function GET(req) {
-    const authKey = req.headers.get("x-api-key");
-    if (!authKey || authKey !== API_KEY) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const authKey = req.headers.get("x-api-key");
+  if (!authKey || authKey !== API_KEY) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page")) || 1;
-    const limit = parseInt(url.searchParams.get("limit")) || 20;
-    const category = url.searchParams.get("category"); // Add category parameter
-    const skip = (page - 1) * limit;
+  const url = new URL(req.url);
+  const page = parseInt(url.searchParams.get("page")) || 1;
+  const limit = parseInt(url.searchParams.get("limit")) || 20;
+  const category = url.searchParams.get("category");
+  const skip = (page - 1) * limit;
 
-    try {
-        await dbConnect();
-        // Add category filter to query
-        const query = { status: "live" };
-        if (category) query.category = category;
-        
-        const products = await Product.find(query).skip(skip).limit(limit);
-        return NextResponse.json(products);
-    } catch (error) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+  try {
+    await dbConnect();
+
+    const query = { status: "live" };
+    if (category) query.category = category;
+
+    const products = await Product.find(query).skip(skip).limit(limit);
+
+    /* ------------------ SERVER-SIDE PRICE CALC ------------------ */
+    const secureProducts = products.map((product) => {
+      const netWeight = Number(product.netWeight) || 0;
+      const metalPrice = Number(product.metalPrice) || 0;
+      const makingCharges = Number(product.makingCharges) || 0;
+
+      const purityMultiplier = getPurityMultiplier(
+        product.metal,
+        product.purity
+      );
+
+      const rawTotal =
+        netWeight * metalPrice * purityMultiplier + makingCharges;
+
+      const totalPrice = Math.ceil(rawTotal);
+
+      return {
+        ...product.toObject(),
+        totalPrice, // ✅ FINAL, TRUSTED PRICE
+      };
+    });
+
+    return NextResponse.json(secureProducts);
+  } catch (error) {
+    console.error("PRODUCT FETCH ERROR:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }

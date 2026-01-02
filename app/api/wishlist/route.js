@@ -2,34 +2,35 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "../../utils/mongoose";
 import Wishlist from "../../models/Wishlist";
 
+/* -------------------- ADD TO WISHLIST -------------------- */
 export async function POST(req) {
   try {
     await dbConnect();
-    const { userPhone, productId } = await req.json();
+    const { userEmail, productId } = await req.json();
 
-    if (!userPhone || !productId) {
+    if (!userEmail || !productId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Check if already exists
-    const existing = await Wishlist.findOne({ userPhone, productId });
-    if (existing) {
+    const exists = await Wishlist.findOne({ userEmail, productId });
+    if (exists) {
       return NextResponse.json(
-        { message: "Product already in wishlist" },
+        { message: "Already in wishlist" },
         { status: 200 }
       );
     }
 
-    const newWishlist = await Wishlist.create({ userPhone, productId });
+    const wishlist = await Wishlist.create({ userEmail, productId });
+
     return NextResponse.json(
-      { message: "Added to wishlist", wishlist: newWishlist },
+      { message: "Added to wishlist", wishlist },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Wishlist Error:", error);
+    console.error("Wishlist POST error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -37,23 +38,25 @@ export async function POST(req) {
   }
 }
 
+
+/* -------------------- REMOVE FROM WISHLIST -------------------- */
 export async function DELETE(req) {
   try {
     await dbConnect();
-    const { userPhone, productId } = await req.json();
+    const { userEmail, productId } = await req.json();
 
-    if (!userPhone || !productId) {
+    if (!userEmail || !productId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const result = await Wishlist.deleteOne({ userPhone, productId });
-    
-    if (result.deletedCount === 0) {
+    const result = await Wishlist.deleteOne({ userEmail, productId });
+
+    if (!result.deletedCount) {
       return NextResponse.json(
-        { error: "Item not found in wishlist" },
+        { error: "Item not found" },
         { status: 404 }
       );
     }
@@ -63,7 +66,7 @@ export async function DELETE(req) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Wishlist Error:", error);
+    console.error("Wishlist DELETE error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
@@ -71,28 +74,32 @@ export async function DELETE(req) {
   }
 }
 
+
+/* -------------------- GET USER WISHLIST -------------------- */
 export async function GET(req) {
   try {
     await dbConnect();
-    const userPhone = req.nextUrl.searchParams.get("userPhone");
-    
-    if (!userPhone) {
+    const userEmail = req.nextUrl.searchParams.get("userEmail");
+
+    if (!userEmail) {
       return NextResponse.json(
-        { error: "User phone required" },
+        { error: "User email required" },
         { status: 400 }
       );
     }
 
-    const wishlist = await Wishlist.find({ userPhone });
+    const wishlist = await Wishlist.find({ userEmail });
+
     return NextResponse.json(
-      { wishlist },  // Return full wishlist items, not just IDs
+      { wishlist },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Wishlist Error:", error);
+    console.error("Wishlist GET error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
+

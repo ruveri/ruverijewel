@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import UserPopup from "../components/userpopup";
+import { useGoogleAuth } from "../components/useGoogleAuth";
 
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200 rounded-lg relative overflow-hidden ${className}`}>
@@ -21,15 +21,14 @@ export default function Products({ category, title }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const filterRef = useRef(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  
+  const { loginWithGoogle, isLoggedIn, getLoggedInUser } = useGoogleAuth();
 
   // Purity filter states
   const [selectedPurities, setSelectedPurities] = useState([]);
 
   // wishlist is now an array of productId strings
   const [wishlist, setWishlist] = useState([]);
-  const [user, setUser] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState(true);
 
   // Purity options for buttons
@@ -61,121 +60,131 @@ export default function Products({ category, title }) {
     setFilteredProducts(filtered);
   }, [products, selectedPurities]);
 
-  // checkLogin loads user + tries local cached wishlist for instant UI
+  // Check login and load wishlist
   useEffect(() => {
-    const checkLogin = () => {
-      const stored = localStorage.getItem("user");
-      const storedWishlist = localStorage.getItem("wishlist");
-
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setIsLoggedIn(!!parsed.phone);
-        setUser(parsed);
-
-        if (parsed.phone) {
-          if (storedWishlist) {
-            try {
-              const parsedWishlist = JSON.parse(storedWishlist).map(id => String(id));
-              setWishlist(parsedWishlist);
-            } catch (e) { }
-            setWishlistLoading(false);
-            fetchWishlist(parsed.phone, { silent: true });
-          } else {
-            fetchWishlist(parsed.phone);
+    const initWishlist = async () => {
+      const user = getLoggedInUser();
+      
+      if (user && user.email) {
+        // Load cached wishlist first for instant UI
+        const cachedWishlist = localStorage.getItem("wishlist");
+        if (cachedWishlist) {
+          try {
+            const parsed = JSON.parse(cachedWishlist);
+            setWishlist(parsed.map(id => String(id)));
+          } catch (e) {
+            console.error("Error parsing cached wishlist:", e);
           }
-        } else {
-          setWishlist([]);
-          setWishlistLoading(false);
         }
+        
+        // Then fetch from server
+        await fetchWishlist(user.email);
       } else {
-        setIsLoggedIn(false);
-        setUser(null);
         setWishlist([]);
         setWishlistLoading(false);
+        localStorage.removeItem("wishlist");
       }
     };
 
-    checkLogin();
-    window.addEventListener("storage", checkLogin); // cross-tab
-    const interval = setInterval(checkLogin, 1000); // same-tab changes
+    initWishlist();
 
-    return () => {
-      window.removeEventListener("storage", checkLogin);
-      clearInterval(interval);
+    // Listen for auth changes across tabs
+    const onStorage = () => {
+      initWishlist();
     };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   // fetchWishlist: returns list of productId strings from server
-  const fetchWishlist = async (phone, { silent = false } = {}) => {
+  const fetchWishlist = async (userEmail, { silent = false } = {}) => {
+    if (!silent) setWishlistLoading(true);
+    
     try {
-      if (!silent) setWishlistLoading(true);
-      const res = await fetch(`/api/wishlist?userPhone=${encodeURIComponent(phone)}`);
-      const data = await res.json();
-      // server returns full wishlist objects: map to productId strings
-      const ids = Array.isArray(data.wishlist)
-        ? data.wishlist.map(w => String(w.productId))
-        : [];
-      setWishlist(ids);
-      try {
-        localStorage.setItem("wishlist", JSON.stringify(ids));
-      } catch (e) {
-        // ignore localStorage quota errors
+      if (!userEmail) {
+        setWishlist([]);
+        localStorage.removeItem("wishlist");
+        return;
       }
+
+      const res = await fetch(
+        `/api/wishlist?userEmail=${encodeURIComponent(userEmail)}`
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch wishlist");
+      }
+
+      const data = await res.json();
+
+      const ids = Array.isArray(data.wishlist)
+        ? data.wishlist.map(item => String(item.productId))
+        : [];
+
+      setWishlist(ids);
+      localStorage.setItem("wishlist", JSON.stringify(ids));
     } catch (error) {
-      console.error("Failed to fetch wishlist:", error);
+      console.error("Wishlist fetch error:", error);
     } finally {
-      setWishlistLoading(false);
+      if (!silent) setWishlistLoading(false);
     }
   };
 
-  // toggle wishlist with optimistic UI update
+  // Toggle wishlist with optimistic UI update
   const toggleWishlist = async (productId) => {
-    // Always re-check login at click time
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setIsLoggedIn(!!parsed.phone);
-      setUser(parsed);
-    } else {
-      setIsLoggedIn(false);
-      setUser(null);
-    }
+    let user = getLoggedInUser();
 
-    if (!isLoggedIn) {
-      setShowLoginPopup(true);
-      return;
+    // 🚨 Not logged in → Google login first
+    if (!user || !user.email) {
+      try {
+        user = await loginWithGoogle();
+        if (!user || !user.email) {
+          console.error("Failed to get user after login");
+          return;
+        }
+      } catch (error) {
+        console.error("Login failed:", error);
+        return; // User cancelled login
+      }
     }
 
     const idStr = String(productId);
     const currentlyIn = wishlist.includes(idStr);
-    const prevWishlist = wishlist.slice();
+    const prevWishlist = [...wishlist];
 
+    // Optimistic UI update
     const nextWishlist = currentlyIn
       ? prevWishlist.filter(id => id !== idStr)
       : [...prevWishlist, idStr];
-
+    
     setWishlist(nextWishlist);
-    try { localStorage.setItem("wishlist", JSON.stringify(nextWishlist)); } catch (e) { }
+    localStorage.setItem("wishlist", JSON.stringify(nextWishlist));
 
     try {
       const res = await fetch("/api/wishlist", {
         method: currentlyIn ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userPhone: user.phone, productId: idStr })
+        body: JSON.stringify({
+          userEmail: user.email,
+          productId,
+        }),
       });
 
       if (!res.ok) {
+        // Revert on error
         setWishlist(prevWishlist);
-        try { localStorage.setItem("wishlist", JSON.stringify(prevWishlist)); } catch (e) { }
-      } else {
-        fetchWishlist(user.phone, { silent: true });
+        localStorage.setItem("wishlist", JSON.stringify(prevWishlist));
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update wishlist");
       }
-    } catch (err) {
-      setWishlist(prevWishlist);
-      try { localStorage.setItem("wishlist", JSON.stringify(prevWishlist)); } catch (e) { }
+    } catch (error) {
+      console.error("Wishlist update error:", error);
+      // Already reverted in the error case above
     }
   };
 
+  // Rest of the component remains the same...
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (filterRef.current && !filterRef.current.contains(e.target)) {
@@ -261,21 +270,6 @@ export default function Products({ category, title }) {
   return (
     <div className="bg-back ci my-6">
       <div className="container mx-auto px-6">
-        {showLoginPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <UserPopup
-              onClose={() => setShowLoginPopup(false)}
-              onSuccess={(userData) => {
-                setIsLoggedIn(true);
-                setUser(userData);
-                setShowLoginPopup(false);
-                // after login, fetch wishlist for this user
-                if (userData?.phone) fetchWishlist(userData.phone);
-              }}
-            />
-          </div>
-        )}
-
         {/* Header Section - Always visible */}
         <div className="mb-8">
           {/* First line: Heading and Price Filter (for mobile) */}
@@ -380,25 +374,23 @@ export default function Products({ category, title }) {
             )}
           </div>
           {!loading && (
-              <div className="md:hidden mt-4 md:mt-0">
-                <div className="flex flex-wrap overflow-x-auto gap-2">
-                  {purityOptions.map(purity => (
-                    <button
-                      key={purity}
-                      onClick={() => togglePurity(purity)}
-                      className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedPurities.includes(purity)
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-black border-gray-300 hover:border-black'
-                        }`}
-                    >
-                      {purity}
-                    </button>
-                  ))}
-                </div>
+            <div className="md:hidden mt-4 md:mt-0">
+              <div className="flex flex-wrap overflow-x-auto gap-2">
+                {purityOptions.map(purity => (
+                  <button
+                    key={purity}
+                    onClick={() => togglePurity(purity)}
+                    className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedPurities.includes(purity)
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-black border-gray-300 hover:border-black'
+                      }`}
+                  >
+                    {purity}
+                  </button>
+                ))}
               </div>
-            )}
-
-
+            </div>
+          )}
         </div>
 
         {/* No Products Available Message */}
@@ -453,7 +445,6 @@ export default function Products({ category, title }) {
             transition={{ duration: 0.6 }}
           >
             {displayProducts.map((product) => {
-
               if (wishlistLoading) {
                 return (
                   <div key={product._id} className="overflow-hidden">
@@ -475,7 +466,7 @@ export default function Products({ category, title }) {
               return (
                 <motion.div
                   key={product._id}
-                  className="overflow-hidden hover:shadow-2xl transition-shadow duration-500"
+                   className="relative overflow-hidden hover:shadow-2xl transition-shadow duration-500"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >

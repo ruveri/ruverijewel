@@ -8,24 +8,25 @@ const addressSchema = new Schema({
 }, { _id: false });
 
 const userSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  number: {
+  googleId: {
     type: String,
     required: true,
     unique: true,
     immutable: true,
   },
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   email: {
     type: String,
-    trim: true,
+    required: true,
+    unique: true,
     lowercase: true,
-    default: null,
+    trim: true,
   },
-  token: {
+  photo: {
     type: String,
     default: null,
   },
@@ -34,5 +35,9 @@ const userSchema = new Schema({
     default: [],
   },
 }, { timestamps: true });
+
+// Create indexes (removed duplicate index: true from field definitions above)
+userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1 });
 
 export default models.User || model("User", userSchema);

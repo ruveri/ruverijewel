@@ -81,15 +81,15 @@ export default function CartPage() {
 
     if (cartItems.length === 0) {
         return (
-            <div className="min-h-screen bg-c1 flex flex-col items-center justify-center p-4">
+            <div className="ci min-h-screen bg-back flex flex-col items-center justify-center p-4">
                 <motion.div
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="text-center"
                 >
                     <h1 className="text-3xl font-bold text-gray-800 mb-4">Your Cart is Empty</h1>
-                    <Link href="/shop" className="inline-block bg-c4 text-white px-6 py-2 rounded-lg 
-                    hover:bg-c4/90 transition-all font-medium text-sm">
+                    <Link href="/" className="inline-block bg-black text-white px-6 py-2 rounded-lg 
+                    hover:bg-black/90 transition-all font-medium text-sm">
                         Continue Shopping
                     </Link>
                 </motion.div>
@@ -99,7 +99,7 @@ export default function CartPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-c1 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="ci min-h-screen bg-back py-8 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <motion.h1
                         initial={{ y: -20, opacity: 0 }}
@@ -174,14 +174,14 @@ export default function CartPage() {
 
                                             <div className="mt-4 flex justify-between items-center">
                                                 {item.price ? (
-                                                    <p className="text-xl font-bold text-c4">Rs. {item.price * item.quantity}</p>
+                                                    <p className="text-xl font-bold text-black">Rs. {item.price * item.quantity}</p>
                                                 ) : (
                                                     <Skeleton className="h-6 w-20" />
                                                 )}
-                                                <div className="flex items-center gap-2 border-2 border-c4 rounded-lg px-2">
+                                                <div className="flex items-center gap-2 border-2 border-black rounded-lg px-2">
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                        className="p-1 text-c4"
+                                                        className="p-1 text-black"
                                                     >
                                                         <MinusIcon className="h-4 w-4" />
                                                     </button>
@@ -190,7 +190,7 @@ export default function CartPage() {
                                                     </span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                        className="p-1 text-c4"
+                                                        className="p-1 text-black"
                                                     >
                                                         <PlusIcon className="h-4 w-4" />
                                                     </button>
@@ -230,17 +230,7 @@ export default function CartPage() {
                                                         <Skeleton className="h-6 w-64 mb-2" />
                                                     )}
 
-                                                    {item.name ? (
-                                                        <p className="text-gray-500 text-sm mt-1">
-                                                            Engraved Name: {item.name}
-                                                        </p>
-                                                    ) : loading ? (
-                                                        <Skeleton className="h-4 w-32 mt-1" />
-                                                    ) : item.category === "carcharam" ? null : (
-                                                        <p className="text-gray-400 text-sm mt-1 italic">
-                                                            No name required
-                                                        </p>
-                                                    )}
+                                                   
 
                                                     {item.selectedChain && (
                                                         <>
@@ -260,14 +250,14 @@ export default function CartPage() {
 
                                             <div className="mt-4 flex justify-between items-center">
                                                 {item.price ? (
-                                                    <p className="text-xl font-bold text-c4">Rs. {item.price * item.quantity}</p>
+                                                    <p className="text-xl font-bold text-black">Rs. {item.price * item.quantity}</p>
                                                 ) : (
                                                     <Skeleton className="h-6 w-20" />
                                                 )}
-                                                <div className="flex items-center gap-3 border-2 border-c4 rounded-lg px-3">
+                                                <div className="flex items-center gap-3 border-2 border-black rounded-lg px-3">
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                        className="p-1 text-c4"
+                                                        className="p-1 text-black"
                                                     >
                                                         <MinusIcon className="h-5 w-5" />
                                                     </button>
@@ -276,7 +266,7 @@ export default function CartPage() {
                                                     </span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                        className="p-1 text-c4"
+                                                        className="p-1 text-black"
                                                     >
                                                         <PlusIcon className="h-5 w-5" />
                                                     </button>
@@ -310,8 +300,8 @@ export default function CartPage() {
                                     localStorage.removeItem("hasRedirected");
                                     setShowCheckoutPopup(true);
                                 }}
-                                className="w-full bg-c4 text-white py-3 rounded-lg mt-6
-        hover:bg-c4 transition-colors flex items-center justify-center gap-3 font-semibold text-lg tracking-wide"
+                                className="w-full bg-black text-white py-3 rounded-lg mt-6
+        hover:bg-black transition-colors flex items-center justify-center gap-3 font-semibold text-lg tracking-wide"
                             >
                                 Checkout
 
@@ -341,7 +331,7 @@ export default function CartPage() {
 
                     {/* Continue Shopping */}
                     <div className="mt-6 text-center">
-                        <Link href="/shop" className="text-c4 hover:text-c4/80 font-medium text-sm">
+                        <Link href="/shop" className="text-black hover:text-black/80 font-medium text-sm">
                             ← Continue Shopping
                         </Link>
                     </div>

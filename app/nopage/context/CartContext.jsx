@@ -7,7 +7,8 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState({});
   const hasSavedAbandonedCartRef = useRef(false);
   const saveTimeoutRef = useRef(null);
-  const hasUserLoggedInRef = useRef(false); // Track if user logged in
+  const hasUserLoggedInRef = useRef(false);
+  const unloadHandlerRef = useRef(null); // Ref to store the unload handler
 
   // Load cart from localStorage on initial load
   useEffect(() => {
@@ -18,7 +19,7 @@ export function CartProvider({ children }) {
   // Save cart to localStorage when cart changes and handle save logic
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem("google_user");
     if (user) {
       hasUserLoggedInRef.current = true;
       handleAbandonedCartSaveLogic(cart);
@@ -28,7 +29,7 @@ export function CartProvider({ children }) {
   // Detect login after cart is added, then start delayed save
   useEffect(() => {
     const checkUserLogin = () => {
-      const storedUser = localStorage.getItem("user");
+      const storedUser = localStorage.getItem("google_user");
       if (storedUser && Object.keys(cart).length && !hasUserLoggedInRef.current) {
         hasUserLoggedInRef.current = true;
         handleAbandonedCartSaveLogic(cart); // Start 15 min timer after login
@@ -56,97 +57,141 @@ export function CartProvider({ children }) {
   const getTotalPrice = () => Object.values(cart).reduce((total, item) => total + item.price * item.quantity, 0);
 
   const addToCart = (productId, productData) => {
-  setCart((prev) => {
-    const existing = prev[productId] || { quantity: 0 };
+    setCart((prev) => {
+      const existing = prev[productId] || { quantity: 0 };
 
-    const updatedCart = {
-      ...prev,
-      [productId]: {
-        ...productData,
-        quantity: existing.quantity + 1,
-        weight: productData.weight,
-        dimensions: productData.dimensions,
-        selectedChain: productData.selectedChain || existing.selectedChain || null, // ✅ store chain type
-      },
-    };
+      const updatedCart = {
+        ...prev,
+        [productId]: {
+          ...productData,
+          quantity: existing.quantity + 1,
+          weight: productData.weight,
+          dimensions: productData.dimensions,
+          selectedChain: productData.selectedChain || existing.selectedChain || null,
+        },
+      };
 
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    return updatedCart;
-  });
-};
-
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      return updatedCart;
+    });
+  };
 
   const updateQuantity = (productId, newQuantity) => {
-  setCart((prev) => {
-    const updatedCart = { ...prev };
+    setCart((prev) => {
+      const updatedCart = { ...prev };
 
-    if (newQuantity <= 0) {
-      delete updatedCart[productId];
-    } else {
-      updatedCart[productId] = {
-        ...updatedCart[productId],
-        quantity: newQuantity,
-        selectedChain: prev[productId]?.selectedChain || null, // ✅ keep chain selection
-      };
+      if (newQuantity <= 0) {
+        delete updatedCart[productId];
+      } else {
+        updatedCart[productId] = {
+          ...updatedCart[productId],
+          quantity: newQuantity,
+          selectedChain: prev[productId]?.selectedChain || null,
+        };
+      }
+
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      return updatedCart;
+    });
+  };
+
+  // Define handleUnload as a standalone function
+  const handleUnload = () => {
+    if (!hasSavedAbandonedCartRef.current) {
+      const storedUser = localStorage.getItem("google_user");
+      if (storedUser) {
+        const { name, email } = JSON.parse(storedUser);
+        saveAbandonedCart(name, email, cart);
+        hasSavedAbandonedCartRef.current = true;
+      }
     }
-
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    return updatedCart;
-  });
-};
+  };
 
   const clearCart = () => {
     setCart({});
     localStorage.removeItem("cart");
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    window.removeEventListener("beforeunload", handleUnload);
+    
+    // Remove the unload event listener
+    if (unloadHandlerRef.current) {
+      window.removeEventListener("beforeunload", unloadHandlerRef.current);
+      unloadHandlerRef.current = null;
+    }
 
     hasSavedAbandonedCartRef.current = false;
     hasUserLoggedInRef.current = false;
   };
 
   const handleAbandonedCartSaveLogic = (currentCart) => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("google_user");
     if (!storedUser || !Object.keys(currentCart).length) return;
 
-    const { name, phone } = JSON.parse(storedUser);
+    const { name, email } = JSON.parse(storedUser);
 
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); // avoid duplicate
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
     saveTimeoutRef.current = setTimeout(() => {
       if (!hasSavedAbandonedCartRef.current) {
-        saveAbandonedCart(name, phone, currentCart);
+        saveAbandonedCart(name, email, currentCart);
         hasSavedAbandonedCartRef.current = true;
       }
     }, 15 * 60 * 1000); // 15 min delay after login
 
-    // Also try saving on tab close
-    window.removeEventListener("beforeunload", handleUnload);
-    window.addEventListener("beforeunload", handleUnload);
+    // Remove existing event listener if any
+    if (unloadHandlerRef.current) {
+      window.removeEventListener("beforeunload", unloadHandlerRef.current);
+    }
 
-    function handleUnload() {
+    // Create a wrapper function for the unload handler
+    const unloadHandler = () => {
       if (!hasSavedAbandonedCartRef.current) {
-        saveAbandonedCart(name, phone, currentCart);
+        saveAbandonedCart(name, email, currentCart);
         hasSavedAbandonedCartRef.current = true;
       }
-    }
+    };
+
+    // Store the handler in ref
+    unloadHandlerRef.current = unloadHandler;
+    
+    // Add new event listener
+    window.addEventListener("beforeunload", unloadHandlerRef.current);
   };
 
-  const saveAbandonedCart = async (name, phone, cartData) => {
-    if (!phone || !Object.keys(cartData).length) return;
+  const saveAbandonedCart = async (name, email, cartData) => {
+    if (!email || !Object.keys(cartData).length) return;
 
     try {
       await fetch("/api/save-abandoned-cart", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, cart: cartData }),
+        headers: { 
+          "Content-Type": "application/json",
+          "x-api-key": process.env.NEXT_PUBLIC_API_KEY 
+        },
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          cart: cartData 
+        }),
       });
       console.log("✅ Abandoned cart saved");
     } catch (err) {
       console.error("❌ Failed to save abandoned cart", err);
     }
   };
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      if (unloadHandlerRef.current) {
+        window.removeEventListener("beforeunload", unloadHandlerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <CartContext.Provider

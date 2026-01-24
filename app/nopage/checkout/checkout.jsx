@@ -5,6 +5,7 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import LoginStep from "./loginstep";
 import AddressStep from "./addressstep";
 import PaymentStep from "./paymentstep";
+import { useGoogleAuth } from "../components/useGoogleAuth";
 
 export default function CheckoutPopup({ onClose }) {
     const [step, setStep] = useState(1);
@@ -15,41 +16,28 @@ export default function CheckoutPopup({ onClose }) {
     });
     const [userData, setUserData] = useState({
         name: "",
-        phone: "",
+        email: "",
+        photo: "",
+        uid: "",
         address: {},
     });
+    
+    const { user, isLoggedIn } = useGoogleAuth();
+
+    // Auto-skip to step 2 if user is already logged in
     useEffect(() => {
-        const checkAuth = async () => {
-            const storedUser = localStorage.getItem("user");
-            if (storedUser) {
-                const userData = JSON.parse(storedUser);
-                const { phone, token } = userData;
-
-                try {
-                    const res = await fetch(`/api/verifyuser?number=${phone}&token=${token}`);
-                    if (res.ok) {
-                        const verified = await res.json();
-                        
-                        // Update user data
-                        setUserData(prev => ({
-                            ...prev,
-                            name: verified.user.name,
-                            phone: verified.user.number,
-                            addresses: verified.user.addresses || []
-                        }));
-
-                        // Skip login step
-                        setIsStepCompleted(prev => ({ ...prev, 1: true }));
-                        setStep(2);
-                    }
-                } catch (err) {
-                    console.warn("Auto-login verification failed:", err);
-                }
-            }
-        };
-
-        checkAuth();
-    }, []);
+        if (isLoggedIn && user && step === 1) {
+            setUserData({
+                name: user.name || "",
+                email: user.email || "",
+                photo: user.photo || "",
+                uid: user.uid || "",
+                address: {}
+            });
+            setIsStepCompleted(prev => ({ ...prev, 1: true }));
+            setStep(2);
+        }
+    }, [isLoggedIn, user, step]);
 
     const completeStep = (stepNum, data) => {
         setIsStepCompleted((prev) => ({ ...prev, [stepNum]: true }));
@@ -64,7 +52,7 @@ export default function CheckoutPopup({ onClose }) {
     const progressPercent = (step / 3) * 100;
 
     return (
-        <div className="z-50 flex justify-center items-center ">
+        <div className="z-50 flex justify-center items-center">
             <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -135,8 +123,6 @@ export default function CheckoutPopup({ onClose }) {
                             {step === 1 && (
                                 <LoginStep
                                     onNext={completeStep}
-                                    defaultName={userData.name}
-                                    defaultPhone={userData.phone}
                                 />
                             )}
                             {step === 2 && <AddressStep onNext={completeStep} />}

@@ -519,12 +519,7 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = async () => {
-    const user = getLoggedInUser();
-
-    if (!user?.email) {
-      setLoginPrompt(true);
-      return;
-    }
+   
 
     if (quantity === 0) {
       addToCart(slug, {
@@ -542,12 +537,7 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = async () => {
-    const user = getLoggedInUser();
-
-    if (!user?.email) {
-      setLoginPrompt(true);
-      return;
-    }
+    
 
     if (quantity === 0) {
       addToCart(slug, {

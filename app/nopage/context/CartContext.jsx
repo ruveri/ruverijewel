@@ -64,6 +64,8 @@ export function CartProvider({ children }) {
         ...prev,
         [productId]: {
           ...productData,
+          // Ensure productId is always included in the product data
+          id: productId,
           quantity: existing.quantity + 1,
           weight: productData.weight,
           dimensions: productData.dimensions,
@@ -85,6 +87,8 @@ export function CartProvider({ children }) {
       } else {
         updatedCart[productId] = {
           ...updatedCart[productId],
+          // Ensure productId is preserved
+          id: productId,
           quantity: newQuantity,
           selectedChain: prev[productId]?.selectedChain || null,
         };

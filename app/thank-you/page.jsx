@@ -24,7 +24,7 @@ export default function ThankYouPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-back flex flex-col items-center justify-center p-4">
+        <div className="h-[80vh] bg-back flex flex-col items-center justify-center p-4 ci">
             <Head>
                 <title>Thank You for Your Order</title>
                 <meta name="description" content="Your personalized necklace order has been placed successfully" />
@@ -32,12 +32,12 @@ export default function ThankYouPage() {
 
             <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8 md:p-12 text-center">
                 {/* Icon */}
-                <div className="check-icon text-c4 w-16 h-16 mx-auto mb-6">
+                <div className="check-icon text-black w-16 h-16 mx-auto mb-6">
                     <CheckCircle className="w-full h-full" />
                 </div>
 
                 {/* Animated Thank You Text */}
-                <h1 className="text-4xl md:text-6xl font-bold text-c4 mb-4 flex justify-center flex-wrap">
+                <h1 className="text-4xl md:text-6xl font-bold text-black mb-4 flex justify-center flex-wrap">
                     {"Thank You".split("").map((letter, index) => (
                         <span
                             key={index}
@@ -54,34 +54,26 @@ export default function ThankYouPage() {
                 {/* Order Confirmation Message */}
                 <p className="text-gray-600 mb-10">
                     Your order has been received and is being processed. You can check updates anytime from the{" "}
-                    <Link href="/my-orders" className="text-c4 hover:underline font-medium">
+                    <Link href="/my-orders" className="text-black hover:underline font-medium">
                         My Orders
                     </Link>{" "}
                     page.
                 </p>
 
 
-                {/* What Happens Next */}
-                <div className="bg-green-50 rounded-lg p-4 mb-10 text-left">
-                    <h3 className="font-semibold text-c4 mb-2">What happens next?</h3>
-                    <ul className="list-disc list-inside text-gray-700 space-y-1">
-                        <li>Your personalized necklace is being handcrafted with care</li>
-                        <li>Once ready, it will be securely packed and handed over for shipping</li>
-                        <li>You’ll receive a tracking link as soon as it’s dispatched</li>
-                    </ul>
-                </div>
+                
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <Link
                         href="/my-orders"
-                        className="bg-c4  text-white font-medium py-3 px-6 rounded-lg transition duration-300"
+                        className="bg-black  text-white font-medium py-3 px-6 rounded-lg transition duration-300"
                     >
                         View Your Orders
                     </Link>
                     <Link
                         href="/"
-                        className="bg-white hover:bg-gray-100 text-c4 font-medium py-3 px-6 border border-gray-300 rounded-lg transition duration-300"
+                        className="bg-white hover:bg-gray-100 text-black font-medium py-3 px-6 border border-gray-300 rounded-lg transition duration-300"
                     >
                         Explore More Products
                     </Link>
@@ -92,7 +84,7 @@ export default function ThankYouPage() {
             <div className="mt-8 text-center text-gray-500 text-sm">
                 <p>
                     Need help?{" "}
-                    <a href="/contact-us" className="text-c4 hover:underline">
+                    <a href="/contact-us" className="text-black hover:underline">
                         Contact our support team
                     </a>
                 </p>

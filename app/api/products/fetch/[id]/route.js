@@ -29,7 +29,8 @@ const getPurityMultiplier = (metal, purity) => {
 };
 
 export async function GET(req, { params }) {
-  const id = params?.id;
+  // ✅ FIXED: Await params before accessing properties
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json(

@@ -1,6 +1,5 @@
 import { dbConnect } from "../../utils/mongoose";
 import Order from "../../models/order";
-import Coupon from "../../models/Coupon";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -15,26 +14,25 @@ export async function POST(req) {
     await dbConnect();
 
     const { 
-      number, 
       name, 
       email, 
       address, 
       items, 
       method,
       total,
-      couponCode,
-      discountAmount
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
     } = await req.json();
 
-    if (!number || !name || !email || !address || !items || !method || !total) {
+    if (!name || !email || !address || !items || !method || !total) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Generate order ID
+    // Generate order ID using timestamp
     const nowUTC = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(nowUTC.getTime() + istOffset);
-    const nowISTT = new Date(nowUTC.getTime());
 
     const pad = (n) => n.toString().padStart(2, "0");
 
@@ -45,63 +43,56 @@ export async function POST(req) {
       pad(nowIST.getHours()) +
       pad(nowIST.getMinutes()) +
       pad(nowIST.getSeconds()) +
-      number;
+      Math.floor(Math.random() * 10000); // Random number for uniqueness
+
+    // Determine payment status
+    const paymentStatus = method === "COD" ? "pending" : "completed";
 
     // Build items array
     const orderItems = items.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
-      amount: total,
+      amount: item.price * item.quantity, // Individual item total
       method,
       pincode: address.pincode,
       city: address.city,
       state: address.state,
       fullAddress: address.line1,
-      engravedName: item.name || "",
-      chain: item.selectedChain || "",
-      createdAt: nowISTT,
       orderId,
+      razorpayOrderId: method === "prepaid" ? (razorpayOrderId || null) : null,
+      razorpayPaymentId: method === "prepaid" ? (razorpayPaymentId || null) : null,
+      razorpaySignature: method === "prepaid" ? (razorpaySignature || null) : null,
+      paymentStatus,
+      createdAt: nowIST,
     }));
 
-    // Create order
-    const existingOrder = await Order.findOne({ number });
+    // Create or update order based on email
+    const existingOrder = await Order.findOne({ email });
 
     if (existingOrder) {
+      // Add new items to existing customer order
       existingOrder.items.push(...orderItems);
       existingOrder.name = name;
-      existingOrder.email = email;
-      existingOrder.total = total;
-      existingOrder.couponCode = couponCode || null;
-      existingOrder.discountAmount = discountAmount || 0;
       await existingOrder.save();
     } else {
+      // Create new order
       await Order.create({
-        number,
         name,
         email,
         items: orderItems,
-        total,
-        couponCode: couponCode || null,
-        discountAmount: discountAmount || 0
       });
     }
 
-    // Record coupon usage if applied
-    if (couponCode && discountAmount > 0) {
-      try {
-        await Coupon.create({
-          userPhone: number,
-          couponCode,
-          orderId
-        });
-      } catch (couponError) {
-        console.error("Failed to record coupon usage:", couponError);
-      }
-    }
-
-    return NextResponse.json({ message: "Order placed successfully", orderId }, { status: 201 });
+    return NextResponse.json({ 
+      message: "Order placed successfully", 
+      orderId 
+    }, { status: 201 });
+    
   } catch (error) {
     console.error("Order Submission Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Internal Server Error",
+      details: error.message 
+    }, { status: 500 });
   }
 }

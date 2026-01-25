@@ -519,11 +519,31 @@ export default function ProductDetail() {
   };
 
   const handleAddToCart = async () => {
-   
+    // Get logged in user
+    const user = getLoggedInUser();
+    if (!user?.email) {
+      try {
+        await loginWithGoogle();
+        const updatedUser = getLoggedInUser();
+        if (!updatedUser?.email) {
+          setLoginPrompt(true);
+          return;
+        }
+      } catch (error) {
+        console.error("Login failed:", error);
+        setLoginPrompt(true);
+        return;
+      }
+    }
 
+    if (!product) return;
+
+    // Use the product's actual ID from the fetched data (slug or _id)
+    const productId = product._id || slug;
+    
     if (quantity === 0) {
-      addToCart(slug, {
-        id: slug,
+      addToCart(productId, {
+        id: productId,  // Ensure product ID is included here
         productName: product.productName,
         quantity: 1,
         price: calculateTotalPrice(product),
@@ -531,17 +551,46 @@ export default function ProductDetail() {
         metal: product.metal,
         purity: product.purity,
         weight: product.netWeight,
+        // Include all other necessary product data
+        description: product.description,
+        category: product.category,
+        grossWeight: product.grossWeight,
+        makingCharges: product.makingCharges,
+        metalPrice: product.metalPrice,
+        color: product.color,
+        gender: product.gender,
+        status: product.status
       });
       setQuantity(1);
     }
   };
 
   const handleBuyNow = async () => {
-    
+    // Get logged in user
+    const user = getLoggedInUser();
+    if (!user?.email) {
+      try {
+        await loginWithGoogle();
+        const updatedUser = getLoggedInUser();
+        if (!updatedUser?.email) {
+          setLoginPrompt(true);
+          return;
+        }
+      } catch (error) {
+        console.error("Login failed:", error);
+        setLoginPrompt(true);
+        return;
+      }
+    }
 
+    if (!product) return;
+
+    // Use the product's actual ID from the fetched data (slug or _id)
+    const productId = product._id || slug;
+    
     if (quantity === 0) {
-      addToCart(slug, {
-        id: slug,
+      addToCart(productId, {
+        id: productId,  // Ensure product ID is included here
         productName: product.productName,
         quantity: 1,
         price: calculateTotalPrice(product),
@@ -549,6 +598,15 @@ export default function ProductDetail() {
         metal: product.metal,
         purity: product.purity,
         weight: product.netWeight,
+        // Include all other necessary product data
+        description: product.description,
+        category: product.category,
+        grossWeight: product.grossWeight,
+        makingCharges: product.makingCharges,
+        metalPrice: product.metalPrice,
+        color: product.color,
+        gender: product.gender,
+        status: product.status
       });
       setQuantity(1);
     }
@@ -559,18 +617,22 @@ export default function ProductDetail() {
   };
 
   const increaseQuantity = () => {
+    if (!product) return;
+    const productId = product._id || slug;
     const newQuantity = quantity + 1;
-    updateQuantity(slug, newQuantity);
+    updateQuantity(productId, newQuantity);
     setQuantity(newQuantity);
   };
 
   const decreaseQuantity = () => {
+    if (!product) return;
+    const productId = product._id || slug;
     if (quantity > 1) {
       const newQuantity = quantity - 1;
-      updateQuantity(slug, newQuantity);
+      updateQuantity(productId, newQuantity);
       setQuantity(newQuantity);
     } else {
-      updateQuantity(slug, 0);
+      updateQuantity(productId, 0);
       setQuantity(0);
     }
   };
@@ -619,6 +681,7 @@ export default function ProductDetail() {
   const allImages = [product.img1, product.img2, product.img3].filter(Boolean);
   const isInWishlist = wishlist.includes(String(slug));
   const totalPrice = calculateTotalPrice(product);
+  const productId = product._id || slug;
 
   return (
     <div className="bg-back min-h-screen ci px-2 sm:px-4">
@@ -633,105 +696,104 @@ export default function ProductDetail() {
       {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto py-8 md:py-12 grid lg:grid-cols-2 gap-6 md:gap-16 pt-4 md:pt-4">
         {/* IMAGES SECTION */}
-       {/* IMAGES SECTION */}
-<div className="relative">
-  {/* Desktop Layout: Main image left, thumbnails right in column */}
-  <div className="hidden lg:grid grid-cols-[3fr_1fr] gap-6">
-    {/* Main Image */}
-    <div className="relative group">
-      <img
-        src={mainImage}
-        alt={product.productName}
-        className="w-full h-[520px] object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-    </div>
+        <div className="relative">
+          {/* Desktop Layout: Main image left, thumbnails right in column */}
+          <div className="hidden lg:grid grid-cols-[3fr_1fr] gap-6">
+            {/* Main Image */}
+            <div className="relative group">
+              <img
+                src={mainImage}
+                alt={product.productName}
+                className="w-full h-[520px] object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
 
-    {/* Thumbnails Column */}
-    {allImages.length > 1 && (
-      <div className="flex flex-col gap-4">
-        {allImages.map((img, index) => (
-          <button
-            key={index}
-            onClick={() => setMainImage(img)}
-            className={`h-[160px] overflow-hidden transition-all duration-300 ${
-              mainImage === img
-                ? 'ring-2 ring-black ring-offset-2'
-                : 'opacity-80 hover:opacity-100'
-            }`}
-          >
-            <img
-              src={img}
-              alt={`Thumbnail ${index + 1}`}
-              className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-            />
-          </button>
-        ))}
-      </div>
-    )}
-  </div>
+            {/* Thumbnails Column */}
+            {allImages.length > 1 && (
+              <div className="flex flex-col gap-4">
+                {allImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMainImage(img)}
+                    className={`h-[160px] overflow-hidden transition-all duration-300 ${
+                      mainImage === img
+                        ? 'ring-2 ring-black ring-offset-2'
+                        : 'opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-  {/* Mobile Layout: Main image above, thumbnails below in row */}
-  <div className="lg:hidden space-y-4">
-    {/* Main Image */}
-    <div className="relative group">
-      <img
-        src={mainImage}
-        alt={product.productName}
-        className="w-full h-[350px] sm:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105 rounded-lg"
-      />
-    </div>
+          {/* Mobile Layout: Main image above, thumbnails below in row */}
+          <div className="lg:hidden space-y-4">
+            {/* Main Image */}
+            <div className="relative group">
+              <img
+                src={mainImage}
+                alt={product.productName}
+                className="w-full h-[350px] sm:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105 rounded-lg"
+              />
+            </div>
 
-    {/* Thumbnails Row - Only show if there's more than 1 image */}
-    {allImages.length > 1 && (
-      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 px-1">
-        {allImages.map((img, index) => (
-          <button
-            key={index}
-            onClick={() => setMainImage(img)}
-            className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden transition-all duration-300 rounded-md ${
-              mainImage === img
-                ? 'ring-2 ring-black ring-offset-1'
-                : 'opacity-80 hover:opacity-100'
-            }`}
-          >
-            <img
-              src={img}
-              alt={`Thumbnail ${index + 1}`}
-              className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-            />
-          </button>
-        ))}
-      </div>
-    )}
-  </div>
+            {/* Thumbnails Row - Only show if there's more than 1 image */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 px-1">
+                {allImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMainImage(img)}
+                    className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden transition-all duration-300 rounded-md ${
+                      mainImage === img
+                        ? 'ring-2 ring-black ring-offset-1'
+                        : 'opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-  {/* Action Buttons */}
-  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex flex-col gap-2">
-    <button
-      onClick={toggleWishlist}
-      className="p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
-    >
-      {isInWishlist ? (
-        <HeartSolid className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-red-500" />
-      ) : (
-        <HeartOutline className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
-      )}
-    </button>
-    <button
-      onClick={handleShare}
-      className="p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
-    >
-      <ShareIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
-    </button>
-  </div>
+          {/* Action Buttons */}
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex flex-col gap-2">
+            <button
+              onClick={toggleWishlist}
+              className="p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
+            >
+              {isInWishlist ? (
+                <HeartSolid className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-red-500" />
+              ) : (
+                <HeartOutline className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
+              )}
+            </button>
+            <button
+              onClick={handleShare}
+              className="p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
+            >
+              <ShareIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
+            </button>
+          </div>
 
-  {/* Share Success Message */}
-  {shareSuccess && (
-    <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-black text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm animate-fade-in">
-      Link copied!
-    </div>
-  )}
-</div>
+          {/* Share Success Message */}
+          {shareSuccess && (
+            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-black text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm animate-fade-in">
+              Link copied!
+            </div>
+          )}
+        </div>
 
         {/* DETAILS SECTION */}
         <div className="space-y-6 md:space-y-8 px-2 sm:px-0">
@@ -915,7 +977,7 @@ export default function ProductDetail() {
 
       {/* UPDATED REVIEWS SECTION */}
       <div className="max-w-7xl mx-auto pb-8 md:pb-12 px-2 sm:px-4 mt-8">
-        <UpdatedReviewForm productId={slug} />
+        <UpdatedReviewForm productId={productId} />
       </div>
 
       {/* LOGIN PROMPT */}

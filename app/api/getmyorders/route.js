@@ -5,15 +5,15 @@ import { NextResponse } from "next/server";
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const number = searchParams.get("number");
+    const email = searchParams.get("email");
 
-    if (!number) {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     await dbConnect();
 
-    const orders = await Order.find({ number }).sort({ createdAt: -1 });
+    const orders = await Order.find({ email }).sort({ createdAt: -1 });
 
     return NextResponse.json({ orders });
   } catch (error) {

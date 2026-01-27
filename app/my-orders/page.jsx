@@ -36,9 +36,9 @@ const getItemStatus = (status) => {
         color: "bg-yellow-100 text-yellow-800",
         icon: <FiClock className="text-yellow-500" />,
       };
-    case "Crafting":
+    case "Packing":
       return {
-        text: "Crafting",
+        text: "Luxury Packaging in Progress",
         color: "bg-purple-100 text-purple-800",
         icon: <FiPackage className="text-purple-500" />,
       };
@@ -87,7 +87,7 @@ const OrderCard = ({ order, products }) => {
   const statusInfo = getItemStatus(order.status);
 
   // Calculate total amount for the order
-  const totalAmount = order.items.reduce((sum, item) => (item.amount), 0);
+  const totalAmount = order.items.reduce((sum, item) => sum + item.amount, 0);
 
   // Toggle expanded view
   const toggleExpand = () => {
@@ -96,14 +96,14 @@ const OrderCard = ({ order, products }) => {
 
   // Generate help email link for a product
   const getHelpEmailLink = (product, item) => {
-    const email = "info@erroneousgold.com";
+    const email = "ruverijewel@gmail.com";
     const subject = `Help Request for Order #${order.orderId} - ${product.productName}`;
     const body = `Dear Support Team,\n\nI need assistance with my order:\n\n` +
       `Order ID: ${order.orderId}\n` +
       `Product ID: ${item.productId}\n` +
       `Product Name: ${product.productName}\n\n` +
       `Please describe your concern below:\n[Please include details about your issue and attach any relevant images]\n\n` +
-      `Thank you,\n${order.userName}\n${order.userPhone}`;
+      `Thank you,\n${order.userName}`;
 
     return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
@@ -149,7 +149,6 @@ const OrderCard = ({ order, products }) => {
                 <div className="font-medium text-gray-900">{order.userName}</div>
                 <div className="text-gray-600">{order.shippingAddress.full}</div>
                 <div className="text-gray-600">{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</div>
-                <div className="mt-1 text-gray-900">Phone: {order.userPhone}</div>
               </div>
             </div>
 
@@ -197,10 +196,10 @@ const OrderCard = ({ order, products }) => {
                             {product ? product.productName : "Product Not Found"}
                           </h4>
 
-                          <div className="grid  gap-2 mt-2 text-sm">
+                          <div className="grid gap-2 mt-2 text-sm">
                             <div>
-                              <span className="text-gray-600">MRP: </span>
-                              <span className="font-medium text-gray-900">₹{product.originalPrice}</span>
+                              <span className="text-gray-600">Price: </span>
+                             <span className="font-medium text-gray-900">₹{item.amount}</span>
                             </div>
 
                             <div className="sm:col-span-2">
@@ -208,27 +207,10 @@ const OrderCard = ({ order, products }) => {
                               <span className="font-medium text-gray-900">{item.quantity}</span>
                             </div>
 
-                            <div className="sm:col-span-2">
+                            {/* <div className="sm:col-span-2">
                               <span className="text-gray-600">Total: </span>
-                              <span className="font-medium text-gray-900">₹{(item.quantity) * (product.originalPrice)}</span>
-                            </div>
-
-                            {item.engravedName && (
-                              <div className="sm:col-span-2">
-                                <span className="text-gray-600">Engraved Name: </span>
-                                <span className="font-medium text-gray-900">{item.engravedName}</span>
-                              </div>
-                            )}
-                            {item.chain && (
-                              <div className="sm:col-span-2">
-                                <span className="text-gray-600">Chain: </span>
-                                <img
-                                  src={item.chain}
-                                  alt={item.chain}
-                                  className="w-16 h-12 object-contain border rounded-lg bg-white"
-                                />
-                              </div>
-                            )}
+                              <span className="font-medium text-gray-900">₹{item.amount}</span>
+                            </div> */}
 
                             <div className="sm:col-span-2">
                               <span className="text-gray-600">Product ID: </span>
@@ -259,7 +241,7 @@ const OrderCard = ({ order, products }) => {
 
                 <div className="border-t border-gray-200 pt-4 mt-2 flex justify-end">
                   <div className="text-right">
-                    <div className="text-sm text-gray-600">Purchased at:</div>
+                    <div className="text-sm text-gray-600">Order Total:</div>
                     <div className="text-lg font-bold text-gray-900">₹{totalAmount}</div>
                   </div>
                 </div>
@@ -281,26 +263,26 @@ export default function OrdersPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const stored = localStorage.getItem("user");
+        const stored = localStorage.getItem("google_user");
         if (!stored) {
           setLoading(false);
           return;
         }
 
-        const { phone, token } = JSON.parse(stored);
-        if (!phone || !token) {
+        const { email, uid } = JSON.parse(stored);
+        if (!email || !uid) {
           setLoading(false);
           return;
         }
 
         // Verify user
-        const verifyRes = await fetch(`/api/verifyuser?number=${phone}&token=${token}`);
+        const verifyRes = await fetch(`/api/verifyuser?email=${encodeURIComponent(email)}&uid=${uid}`);
         if (!verifyRes.ok) {
           throw new Error("User verification failed");
         }
 
         // Fetch orders if verified
-        const ordersRes = await fetch(`/api/getmyorders?number=${phone}`);
+        const ordersRes = await fetch(`/api/getmyorders?email=${encodeURIComponent(email)}`);
         const ordersData = (await ordersRes.json()).orders || [];
 
         // Flatten all items and add top-level order info
@@ -310,7 +292,6 @@ export default function OrdersPage() {
             allItems.push({
               ...item,
               userName: order.name,
-              userPhone: order.number
             });
           });
         });
@@ -333,7 +314,6 @@ export default function OrdersPage() {
             orderId,
             status: firstItem.orderStatus,
             userName: firstItem.userName,
-            userPhone: firstItem.userPhone,
             shippingAddress: {
               full: firstItem.fullAddress,
               city: firstItem.city,
@@ -372,8 +352,7 @@ export default function OrdersPage() {
         setProducts(fetchedProducts);
       } catch (err) {
         console.log("Error verifying user or fetching orders:", err);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        localStorage.removeItem("google_user");
       } finally {
         setLoading(false);
       }
@@ -383,7 +362,7 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-c1 py-6 sm:py-8">
+    <div className="min-h-screen bg-back py-6 sm:py-8 ci">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="mb-8 text-center sm:text-left">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Orders</h1>

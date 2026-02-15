@@ -22,12 +22,15 @@ export async function POST(req) {
       );
     }
 
-    if (!address || !address.pincode || !address.fullAddress) {
+    if (!address || !address.pincode || !address.fullAddress || !address.country) {
       return NextResponse.json(
-        { error: "Invalid address. Pincode and full address are required" }, 
+        { error: "Invalid address. Pincode, full address, and country are required" }, 
         { status: 400 }
       );
     }
+
+    // Ensure country code is uppercase
+    address.country = address.country.toUpperCase();
 
     // Find existing user by googleId or email
     let user = await User.findOne({ 

@@ -5,6 +5,12 @@ const addressSchema = new Schema({
   city: String,
   state: String,
   fullAddress: String,
+  country: {
+    type: String,
+    required: true,
+    uppercase: true,
+    default: "IN"
+  },
 }, { _id: false });
 
 const userSchema = new Schema({
@@ -36,7 +42,7 @@ const userSchema = new Schema({
   },
 }, { timestamps: true });
 
-// Create indexes (removed duplicate index: true from field definitions above)
+// Create indexes
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 

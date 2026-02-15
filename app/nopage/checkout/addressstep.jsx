@@ -5,16 +5,19 @@ import {
   MapPinIcon,
   LockClosedIcon,
   XCircleIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { useCart } from "../context/CartContext";
 import { useGoogleAuth } from "../../nopage/components/useGoogleAuth";
+import { COUNTRIES } from "../../lib/countries"; // Import the countries list
 
 export default function AddressStep({ onNext }) {
   const { getTotalItems } = useCart();
   const { user, isLoggedIn, logout, loginWithGoogle } = useGoogleAuth();
   const quantity = getTotalItems();
   
-  const [postOfficeOptions, setPostOfficeOptions] = useState([]);
+  const [country, setCountry] = useState("IN");
+  const [locationOptions, setLocationOptions] = useState([]);
   const [pincode, setPincode] = useState("");
   const [errors, setErrors] = useState({});
   const [address, setAddress] = useState({ city: "", state: "", line1: "" });
@@ -44,6 +47,7 @@ export default function AddressStep({ onNext }) {
           const data = await res.json();
           
           if (data.success && data.address) {
+            setCountry(data.address.country || "IN");
             setPincode(data.address.pincode || "");
             setAddress({
               city: data.address.city || "",
@@ -63,16 +67,18 @@ export default function AddressStep({ onNext }) {
   }, [isLoggedIn, user]);
 
   // Check pincode serviceability
-  const checkPincodeServiceability = useCallback(async (pincodeToCheck) => {
-    if (pincodeToCheck.length !== 6) return;
+  const checkPincodeServiceability = useCallback(async (pincodeToCheck, selectedCountry) => {
+    if (!pincodeToCheck || pincodeToCheck.length < 3) return;
 
     setLoading(prev => ({ ...prev, checking: true }));
     try {
-      // Check shiprocket serviceability
-      const serviceRes = await fetch(
-        `/api/shiprocket-pincode-check?pincode=${pincodeToCheck}&quantity=${quantity}`,
-        { headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY } }
-      );
+      const url = selectedCountry === "IN"
+        ? `/api/shiprocket-pincode-check?pincode=${pincodeToCheck}&quantity=${quantity}&country=${selectedCountry}`
+        : `/api/shiprocket-pincode-check?pincode=${pincodeToCheck}&country=${selectedCountry}`;
+
+      const serviceRes = await fetch(url, {
+        headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY }
+      });
       
       if (!serviceRes.ok) throw new Error("Service check failed");
       
@@ -88,36 +94,30 @@ export default function AddressStep({ onNext }) {
         setErrors(prev => ({ ...prev, pincode: "", serviceable: "" }));
       }
 
-      // Fetch post office options
-      const locationRes = await fetch(`https://api.postalpincode.in/pincode/${pincodeToCheck}`);
-      const locationData = await locationRes.json();
-      const postOffices = locationData?.[0]?.PostOffice || [];
-
-      const options = postOffices.map(po => ({
-        label: `${po.Name}, ${po.District}`,
-        city: po.Name,
-        district: po.District,
-        state: po.State,
-      }));
-
-      setPostOfficeOptions(options);
-
-      // Autofill city and state if not already set
-      if (options.length > 0 && (!address.city || !address.state)) {
-        setAddress(prev => ({
-          ...prev,
-          city: options[0].label,
-          state: options[0].state,
-        }));
+      // Set location options for international addresses
+      if (serviceData.locations && serviceData.locations.length > 0) {
+        setLocationOptions(serviceData.locations);
+        
+        // Autofill if not already set
+        if (!address.city || !address.state) {
+          setAddress(prev => ({
+            ...prev,
+            city: serviceData.locations[0].city,
+            state: serviceData.locations[0].state,
+          }));
+        }
+      } else {
+        setLocationOptions([]);
       }
+
     } catch (error) {
-      console.error("Pincode check failed:", error.message);
+      console.log("Pincode check failed:", error.message);
       setDeliveryInfo({
         serviceable: false,
         shippingCharge: 0,
         expectedDate: "",
       });
-      setPostOfficeOptions([]);
+      setLocationOptions([]);
     } finally {
       setLoading(prev => ({ ...prev, checking: false }));
     }
@@ -125,13 +125,22 @@ export default function AddressStep({ onNext }) {
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      if (pincode.length === 6) {
-        checkPincodeServiceability(pincode);
+      if (pincode.length >= 3) {
+        checkPincodeServiceability(pincode, country);
       }
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [pincode, checkPincodeServiceability]);
+  }, [pincode, country, checkPincodeServiceability]);
+
+  // Reset pincode when country changes
+  useEffect(() => {
+    setPincode("");
+    setAddress({ city: "", state: "", line1: "" });
+    setLocationOptions([]);
+    setDeliveryInfo({ serviceable: null, shippingCharge: 0, expectedDate: "" });
+    setErrors({});
+  }, [country]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -140,8 +149,8 @@ export default function AddressStep({ onNext }) {
       newErrors.email = "Please login to continue";
     }
 
-    if (pincode.length !== 6) {
-      newErrors.pincode = "Pincode must be 6 digits";
+    if (!pincode || pincode.length < 3) {
+      newErrors.pincode = "Valid postal/pin code is required";
     }
 
     if (!deliveryInfo.serviceable) {
@@ -189,7 +198,8 @@ export default function AddressStep({ onNext }) {
             pincode,
             city: address.city,
             state: address.state,
-            fullAddress: address.line1
+            fullAddress: address.line1,
+            country: country.toUpperCase()
           },
         }),
       });
@@ -201,7 +211,7 @@ export default function AddressStep({ onNext }) {
       }
 
       onNext(2, {
-        address: { ...address, pincode },
+        address: { ...address, pincode, country: country.toUpperCase() },
         shippingCharge: deliveryInfo.shippingCharge,
         email: user.email,
         name: user.name,
@@ -220,10 +230,10 @@ export default function AddressStep({ onNext }) {
     setLoading(prev => ({ ...prev, loggingOut: true }));
     try {
       await logout();
-      // Reset form
+      setCountry("IN");
       setPincode("");
       setAddress({ city: "", state: "", line1: "" });
-      setPostOfficeOptions([]);
+      setLocationOptions([]);
       setDeliveryInfo({ serviceable: null, shippingCharge: 0, expectedDate: "" });
       setErrors({});
     } catch (error) {
@@ -285,6 +295,8 @@ export default function AddressStep({ onNext }) {
     );
   }
 
+  // Part 2 - JSX Return (add after Part 1)
+
   return (
     <div className="mx-auto space-y-6 px-1 ci">
       {/* User Info Display */}
@@ -295,7 +307,6 @@ export default function AddressStep({ onNext }) {
 
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* Avatar */}
             {user.photo && (
               <img
                 src={user.photo}
@@ -304,10 +315,8 @@ export default function AddressStep({ onNext }) {
               />
             )}
 
-            {/* Content */}
             <div className="flex-1 w-full">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                {/* Name + Email */}
                 <div className="min-w-0">
                   <p className="font-medium text-gray-800 truncate">
                     {user.name}
@@ -317,7 +326,6 @@ export default function AddressStep({ onNext }) {
                   </p>
                 </div>
 
-                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
                   disabled={loading.loggingOut}
@@ -335,16 +343,36 @@ export default function AddressStep({ onNext }) {
         </div>
 
         {errors.email && (
-          <p className="text-sm text-red-600 mt-1">
-            {errors.email}
-          </p>
+          <p className="text-sm text-red-600 mt-1">{errors.email}</p>
         )}
+      </div>
+
+      {/* Country Selector */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Country / Region <span className="text-red-500">*</span>
+        </label>
+        <div className="relative">
+          <GlobeAltIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={loading.fetching}
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name} ({c.code})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Pincode Input */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Delivery Pincode <span className="text-red-500">*</span>
+          {country === "IN" ? "PIN Code" : "Postal / ZIP Code"} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <MapPinIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3" />
@@ -352,11 +380,13 @@ export default function AddressStep({ onNext }) {
             type="text"
             value={pincode}
             onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+              const value = country === "IN" 
+                ? e.target.value.replace(/\D/g, "").slice(0, 6)
+                : e.target.value.toUpperCase().slice(0, 10);
               setPincode(value);
               if (errors.pincode) setErrors(prev => ({ ...prev, pincode: "" }));
             }}
-            placeholder="Enter 6-digit pincode"
+            placeholder={country === "IN" ? "Enter 6-digit pincode" : "Enter postal/ZIP code"}
             className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               errors.pincode ? "border-red-500" : "border-gray-300"
             }`}
@@ -371,14 +401,12 @@ export default function AddressStep({ onNext }) {
         )}
 
         {errors.pincode && (
-          <p className="text-sm text-red-600 mt-1">
-            {errors.pincode}
-          </p>
+          <p className="text-sm text-red-600 mt-1">{errors.pincode}</p>
         )}
       </div>
 
       {/* Address Form */}
-      {pincode.length === 6 && (
+      {pincode.length >= 3 && (
         <div className={`space-y-4 animate-fade-in ${
           deliveryInfo.serviceable === false ? 'border-l-4 border-red-500 pl-4' : ''
         }`}>
@@ -391,7 +419,7 @@ export default function AddressStep({ onNext }) {
                   Sorry, we don&apos;t deliver to this area
                 </p>
                 <p className="text-sm text-red-700">
-                  Please try a different pincode
+                  Please try a different {country === "IN" ? "pincode" : "postal code"}
                 </p>
               </div>
             </div>
@@ -405,12 +433,11 @@ export default function AddressStep({ onNext }) {
                   We deliver to your area!
                 </p>
                 <p className="text-sm text-green-700">
-                  🚚 Estimated delivery by{" "}
-                  <strong>{deliveryInfo.expectedDate}</strong>.
+                  🚚 Estimated delivery: <strong>{deliveryInfo.expectedDate}</strong>
                   {deliveryInfo.shippingCharge > 0 ? (
-                    ` Shipping: ₹${deliveryInfo.shippingCharge}`
+                    <>. Shipping: ₹{deliveryInfo.shippingCharge}</>
                   ) : (
-                    " Free shipping"
+                    <>. Free shipping</>
                   )}
                 </p>
               </div>
@@ -421,33 +448,47 @@ export default function AddressStep({ onNext }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Area / City <span className="text-red-500">*</span>
+                  City <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={address.city}
-                  onChange={(e) => {
-                    const selectedOption = postOfficeOptions.find(
-                      opt => opt.label === e.target.value
-                    );
-                    setAddress(prev => ({
-                      ...prev,
-                      city: selectedOption?.label || "",
-                      state: selectedOption?.state || "",
-                    }));
-                    if (errors.city) setErrors(prev => ({ ...prev, city: "" }));
-                  }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                    errors.city ? "border-red-500" : "border-gray-300"
-                  }`}
-                  disabled={postOfficeOptions.length === 0}
-                >
-                  <option value="">Select Area/City</option>
-                  {postOfficeOptions.map((option, index) => (
-                    <option key={index} value={option.label}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                {locationOptions.length > 0 ? (
+                  <select
+                    value={address.city}
+                    onChange={(e) => {
+                      const selectedOption = locationOptions.find(
+                        opt => opt.city === e.target.value
+                      );
+                      setAddress(prev => ({
+                        ...prev,
+                        city: selectedOption?.city || "",
+                        state: selectedOption?.state || "",
+                      }));
+                      if (errors.city) setErrors(prev => ({ ...prev, city: "" }));
+                    }}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      errors.city ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    <option value="">Select City</option>
+                    {locationOptions.map((option, index) => (
+                      <option key={index} value={option.city}>
+                        {option.city}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={address.city}
+                    onChange={(e) => {
+                      setAddress(prev => ({ ...prev, city: e.target.value }));
+                      if (errors.city) setErrors(prev => ({ ...prev, city: "" }));
+                    }}
+                    placeholder="Enter City"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      errors.city ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                )}
                 {errors.city && (
                   <p className="text-sm text-red-600 mt-1">{errors.city}</p>
                 )}
@@ -455,7 +496,7 @@ export default function AddressStep({ onNext }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  State <span className="text-red-500">*</span>
+                  State / Province <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -464,7 +505,7 @@ export default function AddressStep({ onNext }) {
                     setAddress(prev => ({ ...prev, state: e.target.value }));
                     if (errors.state) setErrors(prev => ({ ...prev, state: "" }));
                   }}
-                  placeholder="Ex: Maharashtra"
+                  placeholder="Enter State/Province"
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                     errors.state ? "border-red-500" : "border-gray-300"
                   }`}
@@ -519,7 +560,7 @@ export default function AddressStep({ onNext }) {
                   <LockClosedIcon className="h-5 w-5" />
                   {deliveryInfo.serviceable
                     ? "Continue to Secure Payment"
-                    : "Enter a valid pincode to continue"}
+                    : `Enter a valid ${country === "IN" ? "pincode" : "postal code"} to continue`}
                 </>
               )}
             </button>

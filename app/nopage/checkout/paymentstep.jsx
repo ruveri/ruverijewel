@@ -371,7 +371,7 @@ export default function PaymentStep({ userData }) {
         ))}
 
         {/* COD */}
-        <button
+        {/* <button
           onClick={() => handlePayment("cod")}
           disabled={loading}
           className="w-full flex justify-between items-center bg-black text-white py-3 px-3 rounded text-sm hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -381,7 +381,7 @@ export default function PaymentStep({ userData }) {
             <p className="text-xs text-gray-300">We Recommend Prepaid for Fast Shipping</p>
           </div>
           <div className="text-right text-base">₹{total}</div>
-        </button>
+        </button> */}
 
         <div className="text-xs text-gray-600 pt-4 border-t mt-4 space-y-1">
           <div className="flex items-center gap-2">

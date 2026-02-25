@@ -31,12 +31,12 @@ export default function JewelryEditorialText() {
             expression and
           </span>
 
-          <div className="relative w-[140px] h-[52px] rounded-full overflow-hidden">
+          <div className="relative w-[140px] h-[60px] rounded-full overflow-hidden">
             <Image
-              src="/jewelry/ring1.jpg"
+              src="/jewelry/r1.png"
               alt="Jewelry detail"
               fill
-              className="object-cover"
+              className="object-fit"
             />
           </div>
 
@@ -74,12 +74,12 @@ export default function JewelryEditorialText() {
           viewport={{ once: true }}
           className="flex items-center justify-center gap-6"
         >
-          <div className="relative w-[140px] h-[52px] rounded-full overflow-hidden">
+          <div className="relative w-[140px] h-[60px] rounded-full overflow-hidden">
             <Image
-              src="/jewelry/ring2.jpg"
+              src="/jewelry/r2.png"
               alt="Jewelry detail"
               fill
-              className="object-cover"
+              className="object-fit"
             />
           </div>
 
@@ -87,12 +87,12 @@ export default function JewelryEditorialText() {
             the highest quality materials
           </span>
 
-          <div className="relative w-[140px] h-[52px] rounded-full overflow-hidden">
+          <div className="relative w-[140px] h-[60px] rounded-full overflow-hidden">
             <Image
-              src="/jewelry/ring3.jpg"
+              src="/jewelry/r3.png"
               alt="Jewelry detail"
               fill
-              className="object-cover"
+              className="object-fit"
             />
           </div>
         </motion.div>

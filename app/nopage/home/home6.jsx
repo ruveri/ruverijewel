@@ -3,8 +3,8 @@ import Image from "next/image";
 export default function FeaturesSection() {
   const features = [
     {
-      title: "Safe Return Process",
-      description: "Secure and hassle-free return process.",
+      title: "Safe Exchange Process",
+      description: "Secure and hassle-free exchange process.",
       icon: "/m1.png",
     },
     {

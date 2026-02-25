@@ -5,13 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
-import RingImg from "@/public/jewelry/ring.png";
+import RingImg from "@/public/ring.jpeg";
 import BanglesImg from "@/public/jewelry/bangles.jpg";
 import BraceletsImg from "@/public/jewelry/bracelets.jpg";
 import ChainsImg from "@/public/jewelry/chains.jpg";
-import EarringsImg from "@/public/jewelry/earrings.jpg";
+import EarringsImg from "@/public/earings.jpeg";
 import NecklaceImg from "@/public/jewelry/necklace.jpg";
-import PendentsImg from "@/public/jewelry/pendents.jpg";
+import PendentsImg from "@/public/pendant.jpeg";
 import MenCollectionImg from "@/public/jewelry/men-collection.jpg";
 
 const items = [

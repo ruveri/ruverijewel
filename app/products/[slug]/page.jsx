@@ -16,8 +16,9 @@ const getPurityMultiplier = (metal, purity) => {
     "24K": 1,
     "22K": 0.916,
     "20K": 0.833,
-    "18K": 0.75,
-    "14K": 0.585
+    "18K": 0.78,
+    "14K": 0.615,
+    "9K": 0.415,
   };
 
   const silverMap = {

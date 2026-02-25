@@ -54,7 +54,7 @@ export default function CategoryBanner() {
           viewport={{ once: true, amount: 0.4 }}
         >
           <Image
-            src="/model2.webp"
+            src="/016.jpg"
             alt="Engagement Rings"
             fill
             className="object-cover"
@@ -68,7 +68,7 @@ export default function CategoryBanner() {
           </h2>
 
           <Link
-            href="#"
+            href="/rings"
             className="bg-white text-black px-4 lg:px-8 py-2 lg:py-3 text-sm tracking-widest
                        hover:bg-black hover:text-white transition"
           >
@@ -87,10 +87,10 @@ export default function CategoryBanner() {
           viewport={{ once: true, amount: 0.4 }}
         >
           <Image
-            src="/model3.webp"
+            src="/001.jpg"
             alt="Diamond Earrings"
             fill
-            className="object-cover"
+            className="object-fit"
           />
         </motion.div>
 
@@ -101,7 +101,7 @@ export default function CategoryBanner() {
           </h2>
 
           <Link
-            href="#"
+            href="earrings"
             className="bg-white text-black px-4 lg:px-8 py-2 lg:py-3 text-sm tracking-widest
                        hover:bg-black hover:text-white transition"
           >

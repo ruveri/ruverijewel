@@ -37,7 +37,7 @@ export default function Home() {
             }}
           >
             <Image
-              src="/model1.webp"
+              src="/030.jpg"
               alt="Full Screen Image"
               fill
               priority

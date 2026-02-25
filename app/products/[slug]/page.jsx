@@ -59,11 +59,13 @@ const PriceBreakdown = ({ product }) => {
   const netWeight = Number(product.netWeight) || 0;
   const metalPrice = Number(product.metalPrice) || 0;
   const makingCharges = Number(product.makingCharges) || 0;
+  const diamondPrice = Number(product.diamondPrice) || 0;
+  const diamondWeight = Number(product.diamondWeight) || 0;
   const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
 
   // Calculate individual components
   const metalCost = netWeight * metalPrice * purityMultiplier;
-  const totalPrice = Math.ceil(metalCost + makingCharges);
+  const totalPrice = Math.ceil(metalCost + makingCharges + diamondPrice);
 
   // Calculate GST (assuming 3% for gold jewelry)
   const gstRate = 0.03; // 3%
@@ -91,7 +93,7 @@ const PriceBreakdown = ({ product }) => {
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-black mb-3">How we calculate the price:</h4>
               <p className="text-sm text-gray-600 mb-4">
-                Total Price = (Net Weight × Metal Price of <strong>pure metal</strong> × Purity Multiplier) + Making Charges (includes GST)
+                Total Price = (Net Weight × Metal Price of <strong>pure metal</strong> × Purity Multiplier) + Diamond Price + Making Charges (includes GST)
               </p>
               <p className="text-xs text-gray-500">
                 <em>Purity Multiplier converts pure metal price (24K gold / 999 silver) to the actual product purity (e.g., 22K, 18K, 925 silver)</em>
@@ -132,6 +134,22 @@ const PriceBreakdown = ({ product }) => {
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       ₹{Math.ceil(metalCost).toLocaleString()}
+                    </td>
+                  </tr>
+
+                  {/* Diamond Price Row */}
+                  <tr>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      <div className="font-medium">Diamond Price</div>
+                      <div className="text-xs text-gray-500">
+                        {diamondWeight} ct diamonds
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {diamondWeight} ct
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      ₹{diamondPrice.toLocaleString()}
                     </td>
                   </tr>
 
@@ -542,7 +560,7 @@ export default function ProductDetail() {
 
     // Use the product's actual ID from the fetched data (slug or _id)
     const productId = product._id || slug;
-    
+
     if (quantity === 0) {
       addToCart(productId, {
         id: productId,  // Ensure product ID is included here
@@ -589,7 +607,7 @@ export default function ProductDetail() {
 
     // Use the product's actual ID from the fetched data (slug or _id)
     const productId = product._id || slug;
-    
+
     if (quantity === 0) {
       addToCart(productId, {
         id: productId,  // Ensure product ID is included here
@@ -717,11 +735,10 @@ export default function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setMainImage(img)}
-                    className={`h-[160px] overflow-hidden transition-all duration-300 ${
-                      mainImage === img
-                        ? 'ring-2 ring-black ring-offset-2'
-                        : 'opacity-80 hover:opacity-100'
-                    }`}
+                    className={`h-[160px] overflow-hidden transition-all duration-300 ${mainImage === img
+                      ? 'ring-2 ring-black ring-offset-2'
+                      : 'opacity-80 hover:opacity-100'
+                      }`}
                   >
                     <img
                       src={img}
@@ -752,11 +769,10 @@ export default function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setMainImage(img)}
-                    className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden transition-all duration-300 rounded-md ${
-                      mainImage === img
-                        ? 'ring-2 ring-black ring-offset-1'
-                        : 'opacity-80 hover:opacity-100'
-                    }`}
+                    className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden transition-all duration-300 rounded-md ${mainImage === img
+                      ? 'ring-2 ring-black ring-offset-1'
+                      : 'opacity-80 hover:opacity-100'
+                      }`}
                   >
                     <img
                       src={img}
@@ -891,11 +907,11 @@ export default function ProductDetail() {
           <div className="pt-4 sm:pt-6 border-t border-gray-200">
             <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 text-center">
               <div>
-                <p className="text-xs sm:text-sm text-gray-500">Free Shipping</p>
-                <p className="text-xs text-gray-600">Above ₹5000</p>
+                <p className="text-xs sm:text-sm text-gray-500">Certified Quality</p>
+                <p className="text-xs text-gray-600">BIS Hallmarked</p>
               </div>
               <div>
-                <p className="text-xs sm:text-sm text-gray-500">Easy Returns</p>
+                <p className="text-xs sm:text-sm text-gray-500">Easy Exchange</p>
                 <p className="text-xs text-gray-600">7 Day Policy</p>
               </div>
               <div>
@@ -963,8 +979,8 @@ export default function ProductDetail() {
                   <p className="font-medium text-sm sm:text-base">₹{product.makingCharges?.toLocaleString() || 0}</p>
                 </div>
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Status</p>
-                  <p className="font-medium text-sm sm:text-base capitalize">{product.status}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p>
+                  <p className="font-medium text-sm sm:text-base capitalize">{product.diamondWeight} CT</p>
                 </div>
               </div>
             </div>

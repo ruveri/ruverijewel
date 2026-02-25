@@ -32,7 +32,7 @@ export default function Products({ category, title }) {
   const [wishlistLoading, setWishlistLoading] = useState(true);
 
   // Purity options for buttons
-  const purityOptions = ["22K", "20K", "925 Silver", "900 Silver"];
+  const purityOptions = ["9K", "14K", "18K", "925 Silver", "900 Silver"];
 
   // Toggle purity selection
   const togglePurity = (purity) => {

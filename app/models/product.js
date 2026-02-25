@@ -7,6 +7,11 @@ const productSchema = new Schema(
       required: [true, "Product name is required"],
       trim: true,
     },
+    itemNo: {
+      type: String,
+      required: [true, "Item number is required"],
+      trim: true,
+    },
     makingCharges: {
       type: Number,
       required: [true, "Making charges are required"],
@@ -33,6 +38,7 @@ const productSchema = new Schema(
     purity: {
       type: String,
       enum: [
+        "9K",
         "14K",
         "18K",
         "20K",
@@ -47,9 +53,19 @@ const productSchema = new Schema(
       required: [true, "Purity is required"],
     },
 
+    // 👉 Diamond Details (NEW)
+    diamondWeight: {
+      type: Number,
+      default: 0,
+    },
+    diamondPrice: {
+      type: Number,
+      default: 0,
+    },
+
     // 👉 Updated Fields
     color: {
-      type: String, // Blank or any text allowed
+      type: String,
       trim: true,
     },
     gender: {

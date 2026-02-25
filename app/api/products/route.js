@@ -53,6 +53,7 @@ export async function GET(req) {
       const netWeight = Number(product.netWeight) || 0;
       const metalPrice = Number(product.metalPrice) || 0;
       const makingCharges = Number(product.makingCharges) || 0;
+      const diamondPrice = Number(product.diamondPrice) || 0;
 
       const purityMultiplier = getPurityMultiplier(
         product.metal,
@@ -60,7 +61,7 @@ export async function GET(req) {
       );
 
       const rawTotal =
-        netWeight * metalPrice * purityMultiplier + makingCharges;
+        netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice;
 
       const totalPrice = Math.ceil(rawTotal);
 

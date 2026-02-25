@@ -40,8 +40,9 @@ const calculateTotalPrice = (product) => {
     const netWeight = Number(product.netWeight) || 0;
     const metalPrice = Number(product.metalPrice) || 0;
     const makingCharges = Number(product.makingCharges) || 0;
+    const diamondPrice = Number(product.diamondPrice) || 0;
     const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
-    return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges);
+    return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice);
   } catch (error) {
     console.error("Error calculating price:", error);
     return product.originalPrice || product.totalPrice || 0;

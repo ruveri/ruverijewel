@@ -158,7 +158,7 @@ export default function PaymentStep({ userData }) {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
         amount: online * 100, // Convert to paise
         currency: "INR",
-        name: "Erroneous Gold",
+        name: "Ruveri Jewel",
         description: "Order Payment",
         image: "/logo.png",
         order_id: orderData.razorpayOrderId,
@@ -220,7 +220,7 @@ export default function PaymentStep({ userData }) {
           name: userData.name,
           email: userData.email,
         },
-        theme: { color: "#1b4638" },
+        theme: { color: "#b71c0e" },
       };
 
       const razorpay = new window.Razorpay(razorpayOptions);

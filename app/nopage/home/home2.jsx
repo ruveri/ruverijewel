@@ -54,7 +54,7 @@ export default function CategoryBanner() {
           viewport={{ once: true, amount: 0.4 }}
         >
           <Image
-            src="/016.jpg"
+            src="/jewelry/h2.JPG"
             alt="Engagement Rings"
             fill
             className="object-cover"
@@ -62,8 +62,8 @@ export default function CategoryBanner() {
         </motion.div>
 
         {/* Overlay Content */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-14 bg-black/10">
-          <h2 className="text-white text-sm lg:text-3xl  font-serif tracking-wide mb-4">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-4 lg:pb-2 bg-black/10">
+          <h2 className="text-white text-sm lg:text-3xl  font-serif tracking-wide mb-1">
             ENGAGEMENT RINGS
           </h2>
 
@@ -87,16 +87,16 @@ export default function CategoryBanner() {
           viewport={{ once: true, amount: 0.4 }}
         >
           <Image
-            src="/001.jpg"
+            src="/jewelry/h3.JPG"
             alt="Diamond Earrings"
             fill
-            className="object-fit"
+            className="object-cover"
           />
         </motion.div>
 
         {/* Overlay Content */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-14 bg-black/10">
-          <h2 className="text-white text-sm lg:text-3xl font-serif tracking-wide mb-4">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-end pb-4 lg:pb-2 bg-black/10">
+          <h2 className="text-white text-sm lg:text-3xl font-serif tracking-wide mb-1">
             DIAMOND EARRINGS
           </h2>
 

@@ -23,25 +23,25 @@ export default function Home() {
             className="absolute inset-0"
             initial={{
               opacity: 0,
-              y: "100%",     // 👈 starts from bottom of screen
-              scale: 1.25,   // zoom-in start
+              y: "100%",
+              scale: 1.25,
             }}
             animate={{
               opacity: 1,
-              y: "0%",       // 👈 moves to center
-              scale: 1,      // zoom-out
+              y: "0%",
+              scale: 1,
             }}
             transition={{
               duration: 1.8,
-              ease: [0.22, 1, 0.36, 1], // smooth cinematic easing
+              ease: [0.22, 1, 0.36, 1],
             }}
           >
             <Image
-              src="/030.jpg"
+              src="/jewelry/h12.JPG"
               alt="Full Screen Image"
               fill
               priority
-              className="object-cover"
+              className="object-cover object-bottom" 
             />
           </motion.div>
         )}

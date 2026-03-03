@@ -86,7 +86,7 @@ export default function CustomerTestimonials() {
           <div className="flex justify-center">
             <div className="relative w-[320px] h-[420px] lg:w-[360px] lg:h-[440px] overflow-hidden">
               <Image
-                src="/review.png"
+                src="/jewelry/h1.JPG"
                 alt="Customer"
                 fill
                 className="object-cover"

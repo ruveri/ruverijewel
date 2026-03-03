@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function JewelryEditorialOverlap() {
     return (
@@ -60,8 +61,8 @@ export default function JewelryEditorialOverlap() {
                             className="relative aspect-square"
                         >
                             <Image
-                                src="/front1.webp"
-                                alt="Rings"
+                                src="/jewelry/h4.JPG"
+                                alt="Bangles"
                                 fill
                                 className="object-cover"
                             />
@@ -70,12 +71,12 @@ export default function JewelryEditorialOverlap() {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                                 <h3 className="text-[24px] md:text-[28px] font-light">
-                                    Rings
+                                    Bangles
                                 </h3>
 
-                                <button className="mt-4 rounded-full bg-white text-black px-5 py-2 text-sm hover:bg-black hover:text-white transition">
+                                <Link href="/bangles" className="mt-4 rounded-full bg-white text-black px-5 py-2 text-sm hover:bg-black hover:text-white transition">
                                     View Product
-                                </button>
+                                </Link>
                             </div>
                         </motion.div>
 
@@ -89,8 +90,8 @@ export default function JewelryEditorialOverlap() {
                             className="relative aspect-square"
                         >
                             <Image
-                                src="/front2.webp"
-                                alt="Necklace"
+                                src="/jewelry/h5.JPG"
+                                alt="Bracelets"
                                 fill
                                 className="object-cover"
                             />
@@ -99,12 +100,12 @@ export default function JewelryEditorialOverlap() {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                                 <h3 className="text-[24px] md:text-[28px] font-light">
-                                    Necklace
+                                    Bracelets
                                 </h3>
 
-                                <button className="mt-4 rounded-full bg-white text-black px-5 py-2 text-sm hover:bg-black hover:text-white transition">
+                                <Link href="/bracelets" className="mt-4 rounded-full bg-white text-black px-5 py-2 text-sm hover:bg-black hover:text-white transition">
                                     View Product
-                                </button>
+                                </Link>
                             </div>
                         </motion.div>
 

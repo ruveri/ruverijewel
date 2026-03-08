@@ -54,7 +54,7 @@ const itemSchema = new Schema(
     orderStatus: {
       type: String,
       default: "Confirmed",
-      enum: ["Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"],
+      enum: ["Confirmed", "Processing", "Shipped", "Delivered", "Cancelled", "Rejected", "Replaced"],
     },
     // Razorpay payment details (only for prepaid orders)
     razorpayOrderId: {

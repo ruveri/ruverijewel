@@ -9,7 +9,12 @@ const addressSchema = new Schema({
     type: String,
     required: true,
     uppercase: true,
-    default: "IN"
+    default: "IN",
+  },
+  phone: {
+    type: String,
+    trim: true,
+    default: "",
   },
 }, { _id: false });
 
@@ -42,7 +47,6 @@ const userSchema = new Schema({
   },
 }, { timestamps: true });
 
-// Create indexes
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 

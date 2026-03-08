@@ -1,83 +1,121 @@
 "use client";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useGoogleAuth } from "../components/useGoogleAuth";
 
+// ─── Skeleton ────────────────────────────────────────────────────────────────
 const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200 rounded-lg relative overflow-hidden ${className}`}>
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+  <div className={`bg-gray-200 rounded-lg relative overflow-hidden ${className}`}>
+    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
   </div>
 );
 
+const ProductSkeleton = () => (
+  <div className="overflow-hidden">
+    <Skeleton className="w-full md:h-72 h-52" />
+    <div className="py-4 px-1 space-y-2">
+      <Skeleton className="h-5 w-3/4" />
+      <Skeleton className="h-6 w-1/2" />
+    </div>
+  </div>
+);
+
+// ─── Image with stable caching (never re-fetches once loaded) ─────────────────
+// data-loaded drives CSS opacity for initial load-in.
+// Hover swap is handled by the parent container's CSS — no inline opacity here
+// so group-hover Tailwind classes work without conflict.
+const imageCache = new Set();
+
+const CachedImage = ({ src, alt, className }) => {
+  const [loaded, setLoaded] = useState(() => imageCache.has(src));
+
+  const handleLoad = useCallback(() => {
+    imageCache.add(src);
+    setLoaded(true);
+  }, [src]);
+
+  return (
+    <>
+      {!loaded && <Skeleton className="absolute inset-0 w-full h-full" />}
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        data-loaded={loaded ? "true" : "false"}
+        onLoad={handleLoad}
+        loading="lazy"
+        decoding="async"
+      />
+    </>
+  );
+};
+
+// ─── Hover image swap with smooth fade animation ──────────────────────────────
+// Uses React state for hover so the transition is fully decoupled from
+// CachedImage's load-state opacity — both work independently.
+const HoverImageContainer = ({ img1, img2, alt }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      className="relative w-full md:h-72 h-52 overflow-hidden"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* img1 — fades out on hover */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{ opacity: hovered ? 0 : 1, transition: "opacity 0.5s ease" }}
+      >
+        <CachedImage src={img1} alt={alt} className="w-full h-full object-cover" />
+      </div>
+      {/* img2 — fades in on hover */}
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.5s ease" }}
+      >
+        <CachedImage src={img2} alt={`${alt} alt`} className="w-full h-full object-cover" />
+      </div>
+    </div>
+  );
+};
+
 export default function Products({ category, title }) {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const limit = 20;
+  const limit = 26;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState(null);
   const filterRef = useRef(null);
-  
+
   const { loginWithGoogle, isLoggedIn, getLoggedInUser } = useGoogleAuth();
 
-  // Purity filter states
+  // Purity filter — when empty AND no sort filter → default to 14K only
   const [selectedPurities, setSelectedPurities] = useState([]);
 
-  // wishlist is now an array of productId strings
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(true);
 
-  // Purity options for buttons
   const purityOptions = ["9K", "14K", "18K", "925 Silver", "900 Silver"];
 
-  // Toggle purity selection
   const togglePurity = (purity) => {
-    setSelectedPurities(prev => {
-      if (prev.includes(purity)) {
-        return prev.filter(p => p !== purity);
-      } else {
-        return [...prev, purity];
-      }
-    });
+    setSelectedPurities(prev =>
+      prev.includes(purity) ? prev.filter(p => p !== purity) : [...prev, purity]
+    );
   };
 
-  // Filter products based on selected purities
-  useEffect(() => {
-    if (!products.length) return;
-
-    if (selectedPurities.length === 0) {
-      setFilteredProducts(products);
-      return;
-    }
-
-    const filtered = products.filter(product =>
-      selectedPurities.includes(product.purity)
-    );
-    setFilteredProducts(filtered);
-  }, [products, selectedPurities]);
-
-  // Check login and load wishlist
+  // ─── Wishlist ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const initWishlist = async () => {
       const user = getLoggedInUser();
-      
-      if (user && user.email) {
-        // Load cached wishlist first for instant UI
-        const cachedWishlist = localStorage.getItem("wishlist");
-        if (cachedWishlist) {
-          try {
-            const parsed = JSON.parse(cachedWishlist);
-            setWishlist(parsed.map(id => String(id)));
-          } catch (e) {
-            console.error("Error parsing cached wishlist:", e);
-          }
+      if (user?.email) {
+        const cached = localStorage.getItem("wishlist");
+        if (cached) {
+          try { setWishlist(JSON.parse(cached).map(id => String(id))); } catch {}
         }
-        
-        // Then fetch from server
         await fetchWishlist(user.email);
       } else {
         setWishlist([]);
@@ -85,43 +123,19 @@ export default function Products({ category, title }) {
         localStorage.removeItem("wishlist");
       }
     };
-
     initWishlist();
-
-    // Listen for auth changes across tabs
-    const onStorage = () => {
-      initWishlist();
-    };
-
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener("storage", initWishlist);
+    return () => window.removeEventListener("storage", initWishlist);
   }, []);
 
-  // fetchWishlist: returns list of productId strings from server
   const fetchWishlist = async (userEmail, { silent = false } = {}) => {
     if (!silent) setWishlistLoading(true);
-    
     try {
-      if (!userEmail) {
-        setWishlist([]);
-        localStorage.removeItem("wishlist");
-        return;
-      }
-
-      const res = await fetch(
-        `/api/wishlist?userEmail=${encodeURIComponent(userEmail)}`
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch wishlist");
-      }
-
+      if (!userEmail) { setWishlist([]); localStorage.removeItem("wishlist"); return; }
+      const res = await fetch(`/api/wishlist?userEmail=${encodeURIComponent(userEmail)}`);
+      if (!res.ok) throw new Error("Failed to fetch wishlist");
       const data = await res.json();
-
-      const ids = Array.isArray(data.wishlist)
-        ? data.wishlist.map(item => String(item.productId))
-        : [];
-
+      const ids = Array.isArray(data.wishlist) ? data.wishlist.map(item => String(item.productId)) : [];
       setWishlist(ids);
       localStorage.setItem("wishlist", JSON.stringify(ids));
     } catch (error) {
@@ -131,101 +145,57 @@ export default function Products({ category, title }) {
     }
   };
 
-  // Toggle wishlist with optimistic UI update
   const toggleWishlist = async (productId) => {
     let user = getLoggedInUser();
-
-    // 🚨 Not logged in → Google login first
-    if (!user || !user.email) {
+    if (!user?.email) {
       try {
         user = await loginWithGoogle();
-        if (!user || !user.email) {
-          console.error("Failed to get user after login");
-          return;
-        }
-      } catch (error) {
-        console.error("Login failed:", error);
-        return; // User cancelled login
-      }
+        if (!user?.email) return;
+      } catch { return; }
     }
-
     const idStr = String(productId);
     const currentlyIn = wishlist.includes(idStr);
     const prevWishlist = [...wishlist];
-
-    // Optimistic UI update
-    const nextWishlist = currentlyIn
-      ? prevWishlist.filter(id => id !== idStr)
-      : [...prevWishlist, idStr];
-    
+    const nextWishlist = currentlyIn ? prevWishlist.filter(id => id !== idStr) : [...prevWishlist, idStr];
     setWishlist(nextWishlist);
     localStorage.setItem("wishlist", JSON.stringify(nextWishlist));
-
     try {
       const res = await fetch("/api/wishlist", {
         method: currentlyIn ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userEmail: user.email,
-          productId,
-        }),
+        body: JSON.stringify({ userEmail: user.email, productId }),
       });
-
       if (!res.ok) {
-        // Revert on error
         setWishlist(prevWishlist);
         localStorage.setItem("wishlist", JSON.stringify(prevWishlist));
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update wishlist");
       }
-    } catch (error) {
-      console.error("Wishlist update error:", error);
-      // Already reverted in the error case above
+    } catch {
+      setWishlist(prevWishlist);
+      localStorage.setItem("wishlist", JSON.stringify(prevWishlist));
     }
   };
 
-  // Rest of the component remains the same...
+  // ─── Outside click for filter dropdown ────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
-        setIsFilterOpen(false);
-      }
+      if (filterRef.current && !filterRef.current.contains(e.target)) setIsFilterOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const sortedProducts = useMemo(() => {
-    if (!selectedFilter) return filteredProducts;
-
-    return [...filteredProducts].sort((a, b) => {
-      switch (selectedFilter) {
-        case "price_low_high":
-          return a.originalPrice - b.originalPrice;
-        case "price_high_low":
-          return b.originalPrice - a.originalPrice;
-        case "alphabetical":
-          return a.productName.localeCompare(b.productName);
-        default:
-          return 0;
-      }
-    });
-  }, [filteredProducts, selectedFilter]);
-
-  // Reset state when category changes
+  // ─── Reset on category change ──────────────────────────────────────────────
   useEffect(() => {
     setProducts([]);
-    setFilteredProducts([]);
     setSelectedPurities([]);
     setPage(1);
     setHasMore(true);
     setLoading(true);
   }, [category]);
 
+  // ─── Fetch products ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (category) {
-      fetchProducts();
-    }
+    if (category) fetchProducts();
   }, [page, category]);
 
   const fetchProducts = async () => {
@@ -235,47 +205,64 @@ export default function Products({ category, title }) {
         { headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY } }
       );
       const data = await res.json();
-
       if (data.length < limit) setHasMore(false);
-
       setProducts(prev => {
         const seen = new Set(prev.map(p => p._id));
-        const unique = data.filter(p => !seen.has(p._id));
-        const newProducts = [...prev, ...unique];
-        return newProducts;
+        return [...prev, ...data.filter(p => !seen.has(p._id))];
       });
-
-      setFilteredProducts(prev => {
-        const seen = new Set(prev.map(p => p._id));
-        const unique = data.filter(p => !seen.has(p._id));
-        return [...prev, ...unique];
-      });
-
     } catch (e) {
-      console.log("Error loading products:", e);
+      console.error("Error loading products:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadMore = () => {
-    if (hasMore && !loading) {
-      setPage(prev => prev + 1);
+  // ─── Filter + Sort logic ───────────────────────────────────────────────────
+  // Rule: if no purity filters AND filter is null or "alphabetical" → show only 14K
+  const displayProducts = useMemo(() => {
+    let result = [...products];
+
+    const isPriceSort = selectedFilter === "price_low_high" || selectedFilter === "price_high_low";
+
+    if (selectedPurities.length > 0) {
+      // User has explicitly chosen purities → respect that
+      result = result.filter(p => selectedPurities.includes(p.purity));
+    } else if (!isPriceSort) {
+      // No purity filter + no price sort → default to 14K only
+      result = result.filter(p => p.purity === "14K");
     }
-  };
 
-  // Display products - either sorted or filtered
-  const displayProducts = sortedProducts;
+    // Sort
+    if (selectedFilter === "price_low_high") {
+      result.sort((a, b) => (a.totalPrice ?? a.originalPrice ?? 0) - (b.totalPrice ?? b.originalPrice ?? 0));
+    } else if (selectedFilter === "price_high_low") {
+      result.sort((a, b) => (b.totalPrice ?? b.originalPrice ?? 0) - (a.totalPrice ?? a.originalPrice ?? 0));
+    } else if (selectedFilter === "alphabetical") {
+      result.sort((a, b) => (a.productName ?? "").localeCompare(b.productName ?? ""));
+    }
 
+    return result;
+  }, [products, selectedPurities, selectedFilter]);
+
+  const loadMore = () => { if (hasMore && !loading) setPage(prev => prev + 1); };
+
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-back ci my-6">
+      <style>{`
+        @keyframes shimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
+
       <div className="container mx-auto px-6">
-        {/* Header Section - Always visible */}
+
+        {/* ── Header ── */}
         <div className="mb-8">
-          {/* First line: Heading and Price Filter (for mobile) */}
           {title && (
             <motion.h1
-              className="hidden  md:flex text-2xl md:text-4xl font-bold justify-left items-center text-black tracking-wide "
+              className="hidden md:flex text-2xl md:text-4xl font-bold justify-left items-center text-black tracking-wide"
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -283,11 +270,11 @@ export default function Products({ category, title }) {
               {title}
             </motion.h1>
           )}
+
           <div className="flex flex-row justify-between items-center mb-4">
-            {/* Title - Always show if title exists */}
             {title && (
               <motion.h1
-                className="md:hidden text-2xl md:text-4xl font-bold justify-center items-center text-black tracking-wide "
+                className="md:hidden text-2xl md:text-4xl font-bold text-black tracking-wide"
                 initial={{ opacity: 0, y: -50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
@@ -296,17 +283,19 @@ export default function Products({ category, title }) {
               </motion.h1>
             )}
 
+            {/* Purity pills — desktop */}
             {!loading && (
               <div className="hidden md:flex mt-4 md:mt-0">
-                <div className="flex flex-wrap overflow-x-auto gap-2">
+                <div className="flex flex-wrap gap-2">
                   {purityOptions.map(purity => (
                     <button
                       key={purity}
                       onClick={() => togglePurity(purity)}
-                      className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedPurities.includes(purity)
-                        ? 'bg-black text-white border-black'
-                        : 'bg-white text-black border-gray-300 hover:border-black'
-                        }`}
+                      className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${
+                        selectedPurities.includes(purity)
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-gray-300 hover:border-black"
+                      }`}
                     >
                       {purity}
                     </button>
@@ -315,21 +304,23 @@ export default function Products({ category, title }) {
               </div>
             )}
 
-            {/* Original Filter Button - Always visible when not loading */}
+            {/* Sort filter dropdown */}
             {!loading && (
               <div className="flex justify-end md:justify-normal">
                 <div className="relative" ref={filterRef}>
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm w-full md:w-auto"
+                    className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
                   >
-                    <span>Filter</span>
+                    <span>
+                      {selectedFilter === "price_low_high" ? "Price: Low → High"
+                        : selectedFilter === "price_high_low" ? "Price: High → Low"
+                        : selectedFilter === "alphabetical" ? "A → Z"
+                        : "Filter"}
+                    </span>
                     <svg
                       className={`w-4 h-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -341,28 +332,25 @@ export default function Products({ category, title }) {
                       animate={{ opacity: 1, y: 0 }}
                       className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-10 border border-gray-200 overflow-hidden"
                     >
-                      <button
-                        onClick={() => { setSelectedFilter("price_low_high"); setIsFilterOpen(false); }}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center ${selectedFilter === "price_low_high" ? "bg-gray-50 font-medium" : ""}`}
-                      >
-                        Price: Low to High
-                      </button>
-                      <button
-                        onClick={() => { setSelectedFilter("price_high_low"); setIsFilterOpen(false); }}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center ${selectedFilter === "price_high_low" ? "bg-gray-50 font-medium" : ""}`}
-                      >
-                        Price: High to Low
-                      </button>
-                      <button
-                        onClick={() => { setSelectedFilter("alphabetical"); setIsFilterOpen(false); }}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center ${selectedFilter === "alphabetical" ? "bg-gray-50 font-medium" : ""}`}
-                      >
-                        Alphabetical Order
-                      </button>
+                      {[
+                        { key: "price_low_high", label: "Price: Low to High" },
+                        { key: "price_high_low", label: "Price: High to Low" },
+                        { key: "alphabetical",   label: "Alphabetical Order" },
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => { setSelectedFilter(key); setIsFilterOpen(false); }}
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                            selectedFilter === key ? "bg-gray-50 font-medium" : ""
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                       {selectedFilter && (
                         <button
                           onClick={() => { setSelectedFilter(null); setIsFilterOpen(false); }}
-                          className="w-full text-left px-4 py-3 text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-200 flex items-center"
+                          className="w-full text-left px-4 py-3 text-gray-500 hover:bg-gray-50 transition-colors border-t border-gray-200"
                         >
                           Clear Filter
                         </button>
@@ -373,17 +361,20 @@ export default function Products({ category, title }) {
               </div>
             )}
           </div>
+
+          {/* Purity pills — mobile */}
           {!loading && (
-            <div className="md:hidden mt-4 md:mt-0">
-              <div className="flex flex-wrap overflow-x-auto gap-2">
+            <div className="md:hidden mt-4">
+              <div className="flex flex-wrap gap-2">
                 {purityOptions.map(purity => (
                   <button
                     key={purity}
                     onClick={() => togglePurity(purity)}
-                    className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedPurities.includes(purity)
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-black border-gray-300 hover:border-black'
-                      }`}
+                    className={`px-3 py-2 rounded-lg border transition-all duration-200 text-sm font-medium ${
+                      selectedPurities.includes(purity)
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-black border-gray-300 hover:border-black"
+                    }`}
                   >
                     {purity}
                   </button>
@@ -393,7 +384,7 @@ export default function Products({ category, title }) {
           )}
         </div>
 
-        {/* No Products Available Message */}
+        {/* ── Empty state ── */}
         {!loading && displayProducts.length === 0 && (
           <div className="text-center py-16">
             <motion.div
@@ -402,13 +393,7 @@ export default function Products({ category, title }) {
               transition={{ duration: 0.5 }}
               className="max-w-md mx-auto"
             >
-              <svg
-                className="w-24 h-24 mx-auto text-gray-300 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
               </svg>
               <h3 className="text-2xl font-semibold text-gray-600 mb-2">No Products Available</h3>
@@ -417,17 +402,8 @@ export default function Products({ category, title }) {
                   ? `No products found with ${selectedPurities.join(", ")} purity`
                   : "No products found in this category"}
               </p>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
+              <Link href="/" className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 Back to Home
@@ -436,40 +412,39 @@ export default function Products({ category, title }) {
           </div>
         )}
 
-        {/* Products Grid */}
+        {/* ── Initial skeleton (first load) ── */}
+        {loading && products.length === 0 && (
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
+            {[...Array(8)].map((_, i) => <ProductSkeleton key={i} />)}
+          </div>
+        )}
+
+        {/* ── Product grid ── */}
         {displayProducts.length > 0 && (
           <motion.div
             className="grid gap-6 grid-cols-2 md:grid-cols-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
           >
-            {displayProducts.map((product) => {
+            {displayProducts.map((product, index) => {
               if (wishlistLoading) {
-                return (
-                  <div key={product._id} className="overflow-hidden">
-                    <div className="relative w-full md:h-72 h-52 overflow-hidden"><Skeleton className="w-full h-full" /></div>
-                    <div className="py-4 px-1 text-start">
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <div className="flex justify-start items-center space-x-2 mt-2">
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-6 w-20" />
-                      </div>
-                    </div>
-                  </div>
-                );
+                return <ProductSkeleton key={product._id} />;
               }
 
-              // compare strings — ensure both sides are strings
               const isInWishlist = wishlist.includes(String(product._id));
 
               return (
                 <motion.div
                   key={product._id}
-                   className="relative overflow-hidden hover:shadow-2xl transition-shadow duration-500"
+                  className="relative overflow-hidden hover:shadow-2xl transition-shadow duration-500"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(index % 20, 7) * 0.05 }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
+                  {/* Wishlist button */}
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product._id); }}
                     className="absolute top-2 right-2 z-10 p-2 bg-back rounded-full backdrop-blur-sm"
@@ -486,16 +461,18 @@ export default function Products({ category, title }) {
 
                   <Link href={`/products/${product._id}`}>
                     <div>
-                      <div className="relative w-full md:h-72 h-52 overflow-hidden">
-                        <motion.img src={product.img1} alt={product.productName} className="w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-500" initial={{ opacity: 1 }} whileHover={{ opacity: 0 }} />
-                        <motion.img src={product.img2} alt={`${product.productName} Hover`} className="w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-500" initial={{ opacity: 0 }} whileHover={{ opacity: 1 }} />
-                      </div>
+                      {/* Image container - img2 fades in on hover */}
+                      <HoverImageContainer
+                        img1={product.img1}
+                        img2={product.img2}
+                        alt={product.productName}
+                      />
 
                       <div className="py-4 px-1 text-start">
                         <h2 className="text-sm lg:text-lg font-semibold text-black">{product.productName}</h2>
                         <div className="flex justify-start items-center">
                           <p className="text-md lg:text-xl text-black font-semibold">
-                            ₹{product.totalPrice.toLocaleString()}
+                            ₹{(product.totalPrice ?? 0).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -505,24 +482,20 @@ export default function Products({ category, title }) {
               );
             })}
 
-            {loading && [...Array(4)].map((_, i) => (
-              <div key={i} className="overflow-hidden">
-                <div className="relative w-full md:h-72 h-52 overflow-hidden"><Skeleton className="w-full h-full" /></div>
-                <div className="py-4 px-1 text-start">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <div className="flex justify-start items-center space-x-2 mt-2">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-6 w-20" />
-                  </div>
-                </div>
-              </div>
-            ))}
+            {/* Skeleton rows while fetching next page */}
+            {loading && [...Array(4)].map((_, i) => <ProductSkeleton key={`skel-${i}`} />)}
           </motion.div>
         )}
 
+        {/* Load more */}
         {hasMore && !loading && displayProducts.length > 0 && (
           <div className="text-center mt-8">
-            <button onClick={loadMore} className="bg-black text-white px-6 py-2 rounded-lg hover:bg-black/90 transition-all">Load More</button>
+            <button
+              onClick={loadMore}
+              className="bg-black text-white px-6 py-2 rounded-lg hover:bg-black/90 transition-all"
+            >
+              Load More
+            </button>
           </div>
         )}
       </div>

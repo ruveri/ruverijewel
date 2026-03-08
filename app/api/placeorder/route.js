@@ -55,7 +55,7 @@ export async function POST(req) {
     const orderItems = items.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
-      amount: item.price * item.quantity,
+      amount: total,
       size: item.size && item.size.trim() !== "" ? item.size.trim() : "Not Applicable",
       method,
       pincode: address.pincode,

@@ -23,90 +23,54 @@ const formatDate = (dateString) => {
     minute: '2-digit',
     hour12: false
   };
-
   return date.toLocaleDateString('en-GB', options).replace(',', '');
 };
 
-// Status helper function
+// Status helper
 const getItemStatus = (status) => {
   switch (status) {
     case "Confirmed":
-      return {
-        text: "Confirmed",
-        color: "bg-yellow-100 text-yellow-800",
-        icon: <FiClock className="text-yellow-500" />,
-      };
-    case "Packing":
-      return {
-        text: "Luxury Packaging in Progress",
-        color: "bg-purple-100 text-purple-800",
-        icon: <FiPackage className="text-purple-500" />,
-      };
+      return { text: "Confirmed", color: "bg-yellow-100 text-yellow-800", icon: <FiClock className="text-yellow-500" /> };
+    case "Processing":
+      return { text: "Luxury Packaging in Progress", color: "bg-purple-100 text-purple-800", icon: <FiPackage className="text-purple-500" /> };
     case "Shipped":
-      return {
-        text: "Shipped",
-        color: "bg-blue-100 text-blue-800",
-        icon: <FiTruck className="text-blue-500" />,
-      };
+      return { text: "Shipped", color: "bg-blue-100 text-blue-800", icon: <FiTruck className="text-blue-500" /> };
     case "Delivered":
-      return {
-        text: "Delivered",
-        color: "bg-green-100 text-green-800",
-        icon: <FiCheckCircle className="text-green-500" />,
-      };
+      return { text: "Delivered", color: "bg-green-100 text-green-800", icon: <FiCheckCircle className="text-green-500" /> };
     case "Cancelled":
-      return {
-        text: "Cancelled by Customer",
-        color: "bg-red-100 text-red-800",
-        icon: <FiCalendar className="text-red-500" />,
-      };
+      return { text: "Cancelled by Customer", color: "bg-red-100 text-red-800", icon: <FiCalendar className="text-red-500" /> };
     case "Rejected":
-      return {
-        text: "Rejected by Store",
-        color: "bg-gray-100 text-gray-800",
-        icon: <FiCalendar className="text-gray-500" />,
-      };
+      return { text: "Rejected by Store", color: "bg-gray-100 text-gray-800", icon: <FiCalendar className="text-gray-500" /> };
     case "Replaced":
-      return {
-        text: "Order on Replacement",
-        color: "bg-orange-100 text-orange-800",
-        icon: <FiTruck className="text-orange-500" />,
-      };
+      return { text: "Order on Replacement", color: "bg-orange-100 text-orange-800", icon: <FiTruck className="text-orange-500" /> };
     default:
-      return {
-        text: "Processing",
-        color: "bg-yellow-100 text-yellow-800",
-        icon: <FiClock className="text-yellow-500" />,
-      };
+      return { text: "Processing", color: "bg-yellow-100 text-yellow-800", icon: <FiClock className="text-yellow-500" /> };
   }
 };
 
-// Order Card Component
+// ── Order Card ──────────────────────────────────────────────────────────────
 const OrderCard = ({ order, products }) => {
   const [expanded, setExpanded] = useState(false);
   const statusInfo = getItemStatus(order.status);
 
-  // Calculate total amount for the order
-  const totalAmount = order.items.reduce((sum, item) => sum + item.amount, 0);
+  // Total from DB-stored amounts
+  const totalAmount = order.items.reduce((sum, item) => sum + (item.amount || 0), 0);
 
-  // Toggle expanded view
-  const toggleExpand = () => {
-    setExpanded(!expanded);
-  };
-
-  // Generate help email link for a product
   const getHelpEmailLink = (product, item) => {
     const email = "ruverijewel@gmail.com";
     const subject = `Help Request for Order #${order.orderId} - ${product.productName}`;
-    const body = `Dear Support Team,\n\nI need assistance with my order:\n\n` +
+    const body =
+      `Dear Support Team,\n\nI need assistance with my order:\n\n` +
       `Order ID: ${order.orderId}\n` +
       `Product ID: ${item.productId}\n` +
       `Product Name: ${product.productName}\n\n` +
       `Please describe your concern below:\n[Please include details about your issue and attach any relevant images]\n\n` +
       `Thank you,\n${order.userName}`;
-
     return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
+
+  // Check if this is a prepaid order (has razorpay fields)
+  const isPrepaid = order.paymentMethod === "prepaid";
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden mb-6 shadow-sm hover:shadow-md transition-shadow bg-white">
@@ -124,22 +88,20 @@ const OrderCard = ({ order, products }) => {
             <div className="text-sm font-medium bg-gray-100 px-2 py-1 rounded">
               Order ID: {order.orderId}
             </div>
-
             <button
-              onClick={toggleExpand}
+              onClick={() => setExpanded(!expanded)}
               className="text-blue-600 text-sm flex items-center gap-1"
             >
               {expanded ? 'Less details' : 'More details'}
-              <FiChevronRight
-                className={`transition-transform ${expanded ? 'rotate-90' : ''}`}
-              />
+              <FiChevronRight className={`transition-transform ${expanded ? 'rotate-90' : ''}`} />
             </button>
           </div>
         </div>
 
         {expanded && (
           <div className="mt-4 space-y-5">
-            {/* Shipping Address */}
+
+            {/* ── Shipping Address ── */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-gray-700 mb-2">
                 <FiMapPin className="text-gray-500" />
@@ -148,25 +110,57 @@ const OrderCard = ({ order, products }) => {
               <div className="pl-6 text-sm">
                 <div className="font-medium text-gray-900">{order.userName}</div>
                 <div className="text-gray-600">{order.shippingAddress.full}</div>
-                <div className="text-gray-600">{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}</div>
-              </div>
-            </div>
-
-            {/* Payment & Delivery */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center gap-2 text-gray-700 mb-2">
-                <FiCreditCard className="text-gray-500" />
-                <h3 className="font-medium text-gray-900">Payment & Delivery</h3>
-              </div>
-              <div className="pl-6 text-sm">
-                <div>
-                  <span className="text-gray-600">Payment Method: </span>
-                  <span className="font-medium text-gray-900">{order.paymentMethod}</span>
+                <div className="text-gray-600">
+                  {order.shippingAddress.city}, {order.shippingAddress.state} — {order.shippingAddress.pincode}
                 </div>
               </div>
             </div>
 
-            {/* Product Details */}
+            {/* ── Payment & Delivery ── */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center gap-2 text-gray-700 mb-3">
+                <FiCreditCard className="text-gray-500" />
+                <h3 className="font-medium text-gray-900">Payment & Delivery</h3>
+              </div>
+              <div className="pl-6 text-sm space-y-2">
+                <div>
+                  <span className="text-gray-600">Payment Method: </span>
+                  <span className="font-medium text-gray-900 capitalize">{order.paymentMethod}</span>
+                </div>
+
+                {/* Razorpay fields — only shown for prepaid orders */}
+                {isPrepaid && (
+                  <>
+                    {order.razorpayOrderId && (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span className="text-gray-600 shrink-0">Razorpay Order ID: </span>
+                        <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700 break-all">
+                          {order.razorpayOrderId}
+                        </span>
+                      </div>
+                    )}
+                    {order.razorpayPaymentId && (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span className="text-gray-600 shrink-0">Razorpay Payment ID: </span>
+                        <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700 break-all">
+                          {order.razorpayPaymentId}
+                        </span>
+                      </div>
+                    )}
+                    {order.razorpaySignature && (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span className="text-gray-600 shrink-0">Razorpay Signature: </span>
+                        <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700 break-all">
+                          {order.razorpaySignature}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ── Product Details ── */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-gray-700 mb-2">
                 <FiPackage className="text-gray-500" />
@@ -176,6 +170,15 @@ const OrderCard = ({ order, products }) => {
               <div className="pl-2">
                 {order.items.map((item) => {
                   const product = products[item.productId];
+
+                  // Price as stored in the order DB (authoritative)
+                  const itemPrice = item.amount ?? 0;
+
+                  // Size — "Not Applicable" covers non-ring/bangle categories
+                  const sizeLabel = item.size && item.size.trim() !== "" && item.size !== "Not Applicable"
+                    ? item.size
+                    : null;
+
                   return (
                     <div key={item._id} className="border-t border-gray-200 py-4">
                       <div className="flex gap-4">
@@ -197,29 +200,37 @@ const OrderCard = ({ order, products }) => {
                           </h4>
 
                           <div className="grid gap-2 mt-2 text-sm">
+                            {/* Price from order DB */}
                             <div>
                               <span className="text-gray-600">Price: </span>
-                             <span className="font-medium text-gray-900">₹{item.amount}</span>
+                              <span className="font-medium text-gray-900">₹{itemPrice.toLocaleString()}</span>
                             </div>
 
-                            <div className="sm:col-span-2">
+                            {/* Quantity */}
+                            <div>
                               <span className="text-gray-600">Quantity: </span>
                               <span className="font-medium text-gray-900">{item.quantity}</span>
                             </div>
 
-                            {/* <div className="sm:col-span-2">
-                              <span className="text-gray-600">Total: </span>
-                              <span className="font-medium text-gray-900">₹{item.amount}</span>
-                            </div> */}
+                            {/* Size — shown only if applicable */}
+                            <div>
+                              <span className="text-gray-600">Size: </span>
+                              {sizeLabel ? (
+                                <span className="font-medium text-gray-900">{sizeLabel}</span>
+                              ) : (
+                                <span className="text-gray-400 text-xs">Not Applicable</span>
+                              )}
+                            </div>
 
-                            <div className="sm:col-span-2">
+                            {/* Product ID */}
+                            <div>
                               <span className="text-gray-600">Product ID: </span>
                               <span className="font-mono text-xs text-gray-600">{item.productId}</span>
                             </div>
 
-                            {/* Help with Product Button */}
+                            {/* Help button */}
                             {product && (
-                              <div className="sm:col-span-2 mt-2">
+                              <div className="mt-2">
                                 <a
                                   href={getHelpEmailLink(product, item)}
                                   className="inline-flex items-center gap-1.5 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 py-1.5 px-3 rounded-lg transition-colors"
@@ -239,10 +250,11 @@ const OrderCard = ({ order, products }) => {
                   );
                 })}
 
+                {/* Order total */}
                 <div className="border-t border-gray-200 pt-4 mt-2 flex justify-end">
                   <div className="text-right">
                     <div className="text-sm text-gray-600">Order Total:</div>
-                    <div className="text-lg font-bold text-gray-900">₹{totalAmount}</div>
+                    <div className="text-lg font-bold text-gray-900">₹{totalAmount.toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -254,7 +266,7 @@ const OrderCard = ({ order, products }) => {
   );
 };
 
-// Main Orders Page Component
+// ── Main Orders Page ────────────────────────────────────────────────────────
 export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [groupedOrders, setGroupedOrders] = useState([]);
@@ -264,52 +276,39 @@ export default function OrdersPage() {
     async function fetchOrders() {
       try {
         const stored = localStorage.getItem("google_user");
-        if (!stored) {
-          setLoading(false);
-          return;
-        }
+        if (!stored) { setLoading(false); return; }
 
         const { email, uid } = JSON.parse(stored);
-        if (!email || !uid) {
-          setLoading(false);
-          return;
-        }
+        if (!email || !uid) { setLoading(false); return; }
 
         // Verify user
         const verifyRes = await fetch(`/api/verifyuser?email=${encodeURIComponent(email)}&uid=${uid}`);
-        if (!verifyRes.ok) {
-          throw new Error("User verification failed");
-        }
+        if (!verifyRes.ok) throw new Error("User verification failed");
 
-        // Fetch orders if verified
+        // Fetch orders
         const ordersRes = await fetch(`/api/getmyorders?email=${encodeURIComponent(email)}`);
         const ordersData = (await ordersRes.json()).orders || [];
 
-        // Flatten all items and add top-level order info
+        // Flatten all items with top-level order info attached
         let allItems = [];
         ordersData.forEach(order => {
           order.items.forEach(item => {
-            allItems.push({
-              ...item,
-              userName: order.name,
-            });
+            allItems.push({ ...item, userName: order.name });
           });
         });
 
-        // Group items by orderId
+        // Group by orderId
         const ordersGrouped = {};
         allItems.forEach(item => {
-          if (!ordersGrouped[item.orderId]) {
-            ordersGrouped[item.orderId] = [];
-          }
+          if (!ordersGrouped[item.orderId]) ordersGrouped[item.orderId] = [];
           ordersGrouped[item.orderId].push(item);
         });
 
-        // Create grouped orders array
+        // Build sorted orders array
+        // Pull razorpay fields from the first item (they're identical across items in the same order)
         const ordersArray = Object.keys(ordersGrouped).map(orderId => {
           const items = ordersGrouped[orderId];
           const firstItem = items[0];
-
           return {
             orderId,
             status: firstItem.orderStatus,
@@ -318,38 +317,38 @@ export default function OrdersPage() {
               full: firstItem.fullAddress,
               city: firstItem.city,
               state: firstItem.state,
-              pincode: firstItem.pincode
+              pincode: firstItem.pincode,
             },
             paymentMethod: firstItem.method,
+            // ── Razorpay fields pulled from the stored order item ──
+            razorpayOrderId: firstItem.razorpayOrderId || null,
+            razorpayPaymentId: firstItem.razorpayPaymentId || null,
+            razorpaySignature: firstItem.razorpaySignature || null,
             createdAt: firstItem.createdAt,
-            items: items,
+            items,
           };
         }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         setGroupedOrders(ordersArray);
 
-        // Fetch all product details
+        // Fetch product details for all unique product IDs
         const allProductIds = Array.from(new Set(allItems.map(item => item.productId)));
-
         const fetchedProducts = {};
         await Promise.all(
           allProductIds.map(async (id) => {
             try {
               const res = await fetch(`/api/products/fetch/${id}`, {
-                headers: {
-                  "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
-                },
+                headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY },
               });
-              const product = await res.json();
-              fetchedProducts[id] = product;
+              fetchedProducts[id] = await res.json();
             } catch (err) {
               console.log(`Failed to fetch product ${id}`, err);
               fetchedProducts[id] = null;
             }
           })
         );
-
         setProducts(fetchedProducts);
+
       } catch (err) {
         console.log("Error verifying user or fetching orders:", err);
         localStorage.removeItem("google_user");
@@ -385,11 +384,7 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-6">
             {groupedOrders.map((order) => (
-              <OrderCard
-                key={order.orderId}
-                order={order}
-                products={products}
-              />
+              <OrderCard key={order.orderId} order={order} products={products} />
             ))}
           </div>
         )}

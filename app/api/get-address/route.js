@@ -10,17 +10,13 @@ export async function GET(request) {
 
     if (!email && !googleId) {
       return NextResponse.json(
-        { 
-          success: false,
-          error: "Email or Google ID is required" 
-        }, 
+        { success: false, error: "Email or Google ID is required" },
         { status: 400 }
       );
     }
 
     await dbConnect();
 
-    // Build query
     const query = {};
     if (email) query.email = email.toLowerCase();
     if (googleId) query.googleId = googleId;
@@ -29,40 +25,44 @@ export async function GET(request) {
 
     if (!user) {
       return NextResponse.json(
-        { 
-          success: false,
-          message: "User not found",
-          address: null,
-          email: null
-        }, 
+        { success: false, message: "User not found", address: null, email: null },
         { status: 404 }
       );
     }
 
-    // Get most recent address
-    const latestAddress = user.addresses?.length > 0 
-      ? user.addresses[user.addresses.length - 1] 
+    // Return the most recent address (index 0 — always overwritten on save)
+    const latestAddress = user.addresses?.length > 0
+      ? user.addresses[0]
       : null;
 
-    return NextResponse.json({
-      success: true,
-      address: latestAddress,
-      user: {
-        email: user.email,
-        name: user.name,
-        photo: user.photo,
-        googleId: user.googleId,
-        addressCount: user.addresses?.length || 0
-      }
-    }, { status: 200 });
-    
+    return NextResponse.json(
+      {
+        success: true,
+        // ── address includes phone if it was saved ──────────────────────────
+        address: latestAddress
+          ? {
+              country: latestAddress.country || "IN",
+              pincode: latestAddress.pincode || "",
+              city: latestAddress.city || "",
+              state: latestAddress.state || "",
+              fullAddress: latestAddress.fullAddress || "",
+              phone: latestAddress.phone || "",     // ← returned so frontend can pre-fill
+            }
+          : null,
+        user: {
+          email: user.email,
+          name: user.name,
+          photo: user.photo,
+          googleId: user.googleId,
+          addressCount: user.addresses?.length || 0,
+        },
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Get address error:", error);
     return NextResponse.json(
-      { 
-        success: false,
-        error: "Internal server error" 
-      }, 
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }

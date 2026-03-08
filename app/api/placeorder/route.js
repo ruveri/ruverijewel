@@ -13,23 +13,25 @@ export async function POST(req) {
 
     await dbConnect();
 
-    const { 
-      name, 
-      email, 
-      address, 
-      items, 
+    const {
+      name,
+      email,
+      address,
+      items,
       method,
       total,
+      subtotal,
+      shippingCharge,
       razorpayOrderId,
       razorpayPaymentId,
-      razorpaySignature
+      razorpaySignature,
     } = await req.json();
 
     if (!name || !email || !address || !items || !method || !total) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Generate order ID using timestamp
+    // Generate order ID using IST timestamp
     const nowUTC = new Date();
     const istOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(nowUTC.getTime() + istOffset);
@@ -43,16 +45,18 @@ export async function POST(req) {
       pad(nowIST.getHours()) +
       pad(nowIST.getMinutes()) +
       pad(nowIST.getSeconds()) +
-      Math.floor(Math.random() * 10000); // Random number for uniqueness
+      Math.floor(Math.random() * 10000);
 
-    // Determine payment status
     const paymentStatus = method === "COD" ? "pending" : "completed";
 
-    // Build items array
+    // ── Build items array ─────────────────────────────────────────────────────
+    // Each cart item may carry a `size` field (set on the product detail page).
+    // If the item has no size (other categories), we default to "Not Applicable".
     const orderItems = items.map((item) => ({
       productId: item.id,
       quantity: item.quantity,
-      amount: item.price * item.quantity, // Individual item total
+      amount: item.price * item.quantity,
+      size: item.size && item.size.trim() !== "" ? item.size.trim() : "Not Applicable",
       method,
       pincode: address.pincode,
       city: address.city,
@@ -70,29 +74,22 @@ export async function POST(req) {
     const existingOrder = await Order.findOne({ email });
 
     if (existingOrder) {
-      // Add new items to existing customer order
       existingOrder.items.push(...orderItems);
       existingOrder.name = name;
       await existingOrder.save();
     } else {
-      // Create new order
-      await Order.create({
-        name,
-        email,
-        items: orderItems,
-      });
+      await Order.create({ name, email, items: orderItems });
     }
 
-    return NextResponse.json({ 
-      message: "Order placed successfully", 
-      orderId 
-    }, { status: 201 });
-    
+    return NextResponse.json(
+      { message: "Order placed successfully", orderId },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Order Submission Error:", error);
-    return NextResponse.json({ 
-      error: "Internal Server Error",
-      details: error.message 
-    }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error", details: error.message },
+      { status: 500 }
+    );
   }
 }

@@ -15,6 +15,12 @@ const itemSchema = new Schema(
       type: Number,
       required: true,
     },
+    // ── Size (for rings and bangles; "Not Applicable" for all other categories) ──
+    size: {
+      type: String,
+      trim: true,
+      default: "Not Applicable",
+    },
     method: {
       type: String,
       required: true,

@@ -29,22 +29,16 @@ export default function PaymentStep({ userData }) {
           const res = await fetch(`/api/products/fetch/${item.id}`, {
             headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY },
           });
-
-          if (!res.ok) {
-            throw new Error(`Failed to fetch price for ${item.productName}`);
-          }
-
+          if (!res.ok) throw new Error(`Failed to fetch price for ${item.productName}`);
           const data = await res.json();
           return { id: item.id, totalPrice: data.totalPrice, productData: data };
         });
 
         const prices = await Promise.all(pricePromises);
-
         const priceMap = {};
         prices.forEach(({ id, totalPrice, productData }) => {
           priceMap[id] = { totalPrice, productData };
         });
-
         setProductPrices(priceMap);
       } catch (err) {
         console.error("Error fetching product prices:", err);
@@ -54,9 +48,7 @@ export default function PaymentStep({ userData }) {
       }
     };
 
-    if (cartItems.length > 0) {
-      fetchProductPrices();
-    }
+    if (cartItems.length > 0) fetchProductPrices();
   }, [cartItems.length]);
 
   // ── Totals ──────────────────────────────────────────────────────────────────
@@ -66,8 +58,6 @@ export default function PaymentStep({ userData }) {
   }, 0);
 
   const shippingCharge = userData?.shippingCharge || 0;
-
-  // Grand total = subtotal + shipping. No discounts.
   const grandTotal = subtotal + shippingCharge;
 
   // ── Validation ──────────────────────────────────────────────────────────────
@@ -86,15 +76,19 @@ export default function PaymentStep({ userData }) {
       setError("");
       validateOrder();
 
+      // Items with current live prices + size from cart
       const itemsWithCurrentPrices = cartItems.map((item) => ({
         id: item.id,
         quantity: item.quantity,
         price: productPrices[item.id]?.totalPrice || item.price,
         productName: item.productName,
         image: item.image,
+        // ── size: pass through whatever was stored in the cart ──────────────
+        // ProductDetail stores size in the cart item; defaults to null if not
+        // applicable (non-ring/bangle categories).
+        size: item.size || null,
       }));
 
-      // API creates the Razorpay order — it recalculates price server-side
       const orderPayload = {
         items: cartItems.map((item) => ({ id: item.id, quantity: item.quantity })),
         address: userData.address,
@@ -118,7 +112,7 @@ export default function PaymentStep({ userData }) {
       // ── Razorpay checkout ──────────────────────────────────────────────────
       const razorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        amount: grandTotal * 100, // paise
+        amount: grandTotal * 100,
         currency: "INR",
         name: "Ruveri Jewel",
         description: "Order Payment",
@@ -140,7 +134,7 @@ export default function PaymentStep({ userData }) {
             const verifyData = await verifyRes.json();
 
             if (verifyData.success) {
-              // 2. Place order in DB
+              // 2. Place order in DB — include size on every item
               await fetch("/api/placeorder", {
                 method: "POST",
                 headers: {
@@ -151,11 +145,12 @@ export default function PaymentStep({ userData }) {
                   name: userData.name,
                   email: userData.email,
                   address: userData.address,
+                  // ── Pass the full enriched items array (includes size) ──
                   items: itemsWithCurrentPrices,
                   method: "prepaid",
                   subtotal,
                   shippingCharge,
-                  total: grandTotal, // full amount including shipping
+                  total: grandTotal,
                   razorpayOrderId: response.razorpay_order_id,
                   razorpayPaymentId: response.razorpay_payment_id,
                   razorpaySignature: response.razorpay_signature,
@@ -206,12 +201,8 @@ export default function PaymentStep({ userData }) {
       <div className="grid grid-cols-1 gap-4 text-sm">
         <div className="bg-white rounded shadow p-6 text-center">
           <div className="animate-pulse">
-            <div className="text-lg font-semibold text-gray-700">
-              Loading current prices...
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              Please wait while we fetch the latest pricing
-            </div>
+            <div className="text-lg font-semibold text-gray-700">Loading current prices...</div>
+            <div className="text-sm text-gray-500 mt-2">Please wait while we fetch the latest pricing</div>
           </div>
         </div>
       </div>
@@ -224,10 +215,7 @@ export default function PaymentStep({ userData }) {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <div className="font-semibold">Failed to load current prices</div>
           <div className="text-sm mt-1">{priceError}</div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
+          <button onClick={() => window.location.reload()} className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
             Refresh Page
           </button>
         </div>
@@ -258,38 +246,33 @@ export default function PaymentStep({ userData }) {
 
         <div className="space-y-2 max-h-56 overflow-auto pr-2">
           {cartItems.map((item) => {
-            const currentPrice =
-              productPrices[item.id]?.totalPrice || item.price;
+            const currentPrice = productPrices[item.id]?.totalPrice || item.price;
             const priceChanged = currentPrice !== item.price;
+            // Resolve the size label for display
+            const sizeLabel = item.size && item.size.trim() !== ""
+              ? item.size
+              : "Not Applicable";
 
             return (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 pb-2 border-b last:border-b-0"
-              >
+              <div key={item.id} className="flex items-start gap-3 pb-2 border-b last:border-b-0">
                 <div className="w-20 h-20 shrink-0 overflow-hidden rounded border bg-white">
-                  <img
-                    src={item.image}
-                    alt={item.productName}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={item.image} alt={item.productName} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col justify-between text-sm w-full">
                   <p className="font-medium text-gray-900">{item.productName}</p>
+                  <p className="text-xs text-gray-500">Quantity: {item.quantity}</p>
+                  {/* ── Size display ── */}
                   <p className="text-xs text-gray-500">
-                    Quantity: {item.quantity}
+                    Size:{" "}
+                    <span className={sizeLabel !== "Not Applicable" ? "font-semibold text-gray-800" : "text-gray-400"}>
+                      {sizeLabel}
+                    </span>
                   </p>
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`font-semibold ${
-                        priceChanged ? "text-black" : "text-gray-800"
-                      }`}
-                    >
+                    <span className={`font-semibold ${priceChanged ? "text-black" : "text-gray-800"}`}>
                       ₹{currentPrice}
                     </span>
-                    {priceChanged && (
-                      <span className="text-xs text-green-600">(Updated)</span>
-                    )}
+                    {priceChanged && <span className="text-xs text-green-600">(Updated)</span>}
                   </div>
                 </div>
               </div>
@@ -305,11 +288,7 @@ export default function PaymentStep({ userData }) {
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
-            {shippingCharge > 0 ? (
-              <span>₹{shippingCharge}</span>
-            ) : (
-              <span className="text-green-600">Free</span>
-            )}
+            {shippingCharge > 0 ? <span>₹{shippingCharge}</span> : <span className="text-green-600">Free</span>}
           </div>
           <div className="flex justify-between font-semibold text-base text-gray-900 pt-2 border-t">
             <span>Total</span>
@@ -320,9 +299,7 @@ export default function PaymentStep({ userData }) {
 
       {/* ── Payment Options ── */}
       <div className="bg-white rounded shadow p-4 space-y-4">
-        <h2 className="text-base font-semibold border-b pb-2">
-          Payment Options
-        </h2>
+        <h2 className="text-base font-semibold border-b pb-2">Payment Options</h2>
 
         {[
           { label: "Pay via UPI", desc: "GPay, PhonePe, Paytm" },
@@ -340,9 +317,7 @@ export default function PaymentStep({ userData }) {
               <p className="font-bold">{method.label}</p>
               <p className="text-xs">{method.desc}</p>
             </div>
-            <div className="text-right text-base font-semibold">
-              ₹{grandTotal}
-            </div>
+            <div className="text-right text-base font-semibold">₹{grandTotal}</div>
           </button>
         ))}
 
@@ -353,10 +328,7 @@ export default function PaymentStep({ userData }) {
           </div>
           <p className="text-gray-500">
             Need help?{" "}
-            <Link
-              href="/contact-us"
-              className="text-c4 font-medium underline hover:text-c4/80"
-            >
+            <Link href="/contact-us" className="text-c4 font-medium underline hover:text-c4/80">
               Contact our support team
             </Link>
           </p>

@@ -1,46 +1,50 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Personalized Name Rakhis – Custom Rakhis for Raksha Bandhan | Erroneous Gold",
+  title: "Gold, Silver & Diamond Bangles for Women | Ruveri Jewel",
   description:
-    "Celebrate Raksha Bandhan with personalized Name Rakhis from Erroneous Gold. Customize your Rakhi with names or initials — a thoughtful and memorable gift for your sibling.",
+    "Shop elegant gold, silver, and diamond bangles at Ruveri Jewel. Discover handcrafted bangles designed for modern women. Luxury jewelry crafted with precision and shipped worldwide.",
   keywords: [
-    "personalized rakhi",
-    "custom name rakhi",
-    "raksha bandhan gifts",
-    "name rakhi",
-    "custom rakhi india",
-    "gift rakhi",
-    "handcrafted rakhi",
-    "personalized gifts",
-    "Erroneous Gold",
+    "gold bangles",
+    "diamond bangles",
+    "silver bangles",
+    "bangles for women",
+    "luxury bangles",
+    "designer bangles",
+    "buy bangles online",
+    "gold jewelry",
+    "diamond jewelry",
+    "silver jewelry",
+    "Ruveri Jewel",
   ],
-  openGraph: {
-    title: "Personalized Name Rakhis | Erroneous Gold",
+
+  logo1Graph: {
+    title: "Luxury Gold, Silver & Diamond Bangles | Ruveri Jewel",
     description:
-      "Shop custom Name Rakhis from Erroneous Gold. Personalized Rakhis handcrafted with care — perfect for gifting your sibling this Raksha Bandhan.",
-    url: "https://erroneousgold.com/rakhi",
-    siteName: "Erroneous Gold",
+      "Discover stunning gold, silver, and diamond bangles at Ruveri Jewel. Elegant designs crafted for timeless beauty and global delivery.",
+    url: "https://ruverijewel.com/bangles",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/logo1.png",
         width: 1200,
         height: 630,
-        alt: "Personalized Name Rakhi by Erroneous Gold",
+        alt: "Luxury Bangles Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Custom Name Rakhis – Personalized Rakhi Collection | Erroneous Gold",
+    title: "Designer Gold, Silver & Diamond Bangles | Ruveri Jewel",
     description:
-      "Create your personalized Name Rakhi — a meaningful and unique gift for your sibling this Raksha Bandhan. Handcrafted by Erroneous Gold.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Explore the luxury bangles collection by Ruveri Jewel. Shop elegant gold, silver, and diamond bangles crafted for every occasion.",
+    images: ["https://ruverijewel.com/logo1.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/rakhi",
+    canonical: "https://ruverijewel.com/bangles",
   },
 };
 

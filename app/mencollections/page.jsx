@@ -47,7 +47,7 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <Products category="skeychain" title="Single Name Keychains" />
+      <Products category="mencollections" title="Men Collections" />
     </>
   );
 }

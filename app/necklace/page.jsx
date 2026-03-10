@@ -47,7 +47,7 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <Products category="designerpendents" title="Designer Pendents" />
+      <Products category="necklace" title="Necklace" />
     </>
   );
 }

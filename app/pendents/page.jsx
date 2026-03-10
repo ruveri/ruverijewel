@@ -48,8 +48,8 @@ export default function Home() {
   return (
     <>
       <Products
-        category="singlenamenecklace"
-        title="Single Name Necklaces"
+        category="pendents"
+        title="Pendents"
       />
     </>
   );

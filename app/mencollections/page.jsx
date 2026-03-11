@@ -1,46 +1,49 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Single Name Keychains – Personalized Name Keychains | Erroneous Gold",
+  title: "Men’s Gold, Silver & Diamond Jewelry | Ruveri Jewel",
   description:
-    "Discover custom Single Name Keychains at Erroneous Gold. Personalize your keychain with your name or initials — a stylish accessory and perfect gift for any occasion.",
+    "Explore the premium men’s jewelry collection at Ruveri Jewel. Discover stylish gold, silver, and diamond rings, chains, and bracelets crafted for modern men. Luxury designs with worldwide shipping.",
   keywords: [
-    "single name keychain",
-    "personalized keychain",
-    "custom name keychain",
-    "engraved keychain",
-    "name keychain gift",
-    "personalized accessories",
-    "custom keychain india",
-    "name keychain design",
-    "erroneous gold",
+    "mens jewelry",
+    "mens gold jewelry",
+    "mens silver jewelry",
+    "mens diamond jewelry",
+    "mens rings",
+    "mens chains",
+    "mens bracelets",
+    "luxury mens jewelry",
+    "designer mens jewelry",
+    "Ruveri Jewel"
   ],
+
   openGraph: {
-    title: "Custom Single Name Keychains | Erroneous Gold",
+    title: "Luxury Men’s Jewelry Collection | Ruveri Jewel",
     description:
-      "Shop personalized Single Name Keychains from Erroneous Gold. Add your name or initials to create a meaningful, stylish everyday accessory.",
-    url: "https://erroneousgold.com/skeychain",
-    siteName: "Erroneous Gold",
+      "Shop elegant men’s gold, silver, and diamond jewelry from Ruveri Jewel. Discover premium rings, chains, and bracelets designed for modern style.",
+    url: "https://ruverijewel.com/mens-collection",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/open.png",
         width: 1200,
         height: 630,
-        alt: "Single Name Keychain – Personalized Gift by Erroneous Gold",
+        alt: "Men’s Jewelry Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Personalized Single Name Keychains | Erroneous Gold",
+    title: "Designer Men’s Gold, Silver & Diamond Jewelry | Ruveri Jewel",
     description:
-      "Create your custom Single Name Keychain — a personalized accessory that adds meaning to your everyday essentials.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Discover stylish jewelry for men at Ruveri Jewel. Shop premium rings, chains, and bracelets crafted with precision and luxury.",
+    images: ["https://ruverijewel.com/open.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/skeychain",
+    canonical: "https://ruverijewel.com/mens-collection",
   },
 };
 

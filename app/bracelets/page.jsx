@@ -1,46 +1,50 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Custom Single Name Necklaces – Personalized Name Jewelry | Erroneous Gold",
+  title: "Gold, Silver & Diamond Bracelets for Women | Ruveri Jewel",
   description:
-    "Shop beautifully crafted Single Name Necklaces at Erroneous Gold. Create your personalized name necklace – a stylish and meaningful accessory or gift.",
+    "Explore elegant gold, silver, and diamond bracelets at Ruveri Jewel. Discover beautifully crafted luxury bracelets designed for modern style and timeless elegance. Worldwide shipping available.",
   keywords: [
-    "single name necklace",
-    "custom name necklace",
-    "personalized jewelry",
-    "engraved necklace",
-    "name pendant",
-    "custom name jewelry",
-    "personalized necklace india",
-    "name necklace gift",
-    "erroneous gold",
+    "gold bracelets",
+    "diamond bracelets",
+    "silver bracelets",
+    "bracelets for women",
+    "luxury bracelets",
+    "designer bracelets",
+    "buy bracelets online",
+    "gold jewelry",
+    "diamond jewelry",
+    "silver jewelry",
+    "Ruveri Jewel",
   ],
-  openGraph: {
-    title: "Custom Single Name Necklaces | Erroneous Gold",
+
+  logo1Graph: {
+    title: "Luxury Gold, Silver & Diamond Bracelets | Ruveri Jewel",
     description:
-      "Design your own single name necklace with Erroneous Gold. Personalized jewelry handcrafted with care – perfect for daily wear or gifting.",
-    url: "https://erroneousgold.com/singlenamenecklace",
-    siteName: "Erroneous Gold",
+      "Shop premium gold, silver, and diamond bracelets from Ruveri Jewel. Elegant designs crafted with precision and shipped worldwide.",
+    url: "https://ruverijewel.com/bracelets",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/logo1.png",
         width: 1200,
         height: 630,
-        alt: "Single Name Necklace – Personalized Jewelry by Erroneous Gold",
+        alt: "Luxury Bracelets Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Personalized Single Name Necklaces | Erroneous Gold",
+    title: "Designer Gold, Silver & Diamond Bracelets | Ruveri Jewel",
     description:
-      "Shop elegant, custom-made single name necklaces. Personalized jewelry handcrafted with love by Erroneous Gold.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Discover the stunning bracelet collection at Ruveri Jewel. Shop elegant gold, silver, and diamond bracelets perfect for every occasion.",
+    images: ["https://ruverijewel.com/logo1.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/singlenamenecklace",
+    canonical: "https://ruverijewel.com/bracelets",
   },
 };
 

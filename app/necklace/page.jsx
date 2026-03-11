@@ -1,46 +1,50 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Designer Pendents – Unique & Stylish Pendants | Erroneous Gold",
+  title: "Gold, Silver & Diamond Necklaces for Women | Ruveri Jewel",
   description:
-    "Discover our collection of Designer Pendents at Erroneous Gold. Unique, stylish, and elegant pendants perfect for gifting or adding a touch of sophistication to your look.",
+    "Explore elegant gold, silver, and diamond necklaces at Ruveri Jewel. Discover beautifully crafted luxury necklaces designed for modern women and timeless style. Worldwide shipping available.",
   keywords: [
-    "designer pendents",
-    "unique pendants",
-    "stylish pendents",
-    "fashion pendants",
-    "gift pendants",
-    "custom pendents india",
-    "personalized pendents",
-    "fashion accessories",
-    "erroneous gold",
+    "gold necklaces",
+    "diamond necklaces",
+    "silver necklaces",
+    "necklaces for women",
+    "luxury necklaces",
+    "designer necklaces",
+    "buy necklaces online",
+    "gold jewelry",
+    "diamond jewelry",
+    "silver jewelry",
+    "Ruveri Jewel"
   ],
-  openGraph: {
-    title: "Designer Pendents Collection | Erroneous Gold",
+
+  logo1Graph: {
+    title: "Luxury Gold, Silver & Diamond Necklaces | Ruveri Jewel",
     description:
-      "Shop Designer Pendents from Erroneous Gold. Unique and stylish pendants crafted to enhance your style or make a perfect gift.",
-    url: "https://erroneousgold.com/designerpendents",
-    siteName: "Erroneous Gold",
+      "Shop premium gold, silver, and diamond necklaces from Ruveri Jewel. Elegant jewelry crafted with precision for everyday style and special occasions.",
+    url: "https://ruverijewel.com/necklaces",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/logo1.png",
         width: 1200,
         height: 630,
-        alt: "Designer Pendents – Stylish Pendants by Erroneous Gold",
+        alt: "Luxury Necklace Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Designer Pendents – Unique & Stylish Pendants | Erroneous Gold",
+    title: "Designer Gold, Silver & Diamond Necklaces | Ruveri Jewel",
     description:
-      "Explore Designer Pendents from Erroneous Gold. Perfectly crafted pendants with unique designs for gifting or personal style.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Discover elegant necklaces at Ruveri Jewel. Shop stunning gold, silver, and diamond necklace designs crafted for timeless beauty.",
+    images: ["https://ruverijewel.com/logo1.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/designerpendents",
+    canonical: "https://ruverijewel.com/necklaces",
   },
 };
 

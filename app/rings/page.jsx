@@ -1,46 +1,51 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Custom Single Name Necklaces – Personalized Name Jewelry | Erroneous Gold",
+  title: "Gold, Silver & Diamond Rings for Women | Ruveri Jewel",
   description:
-    "Shop beautifully crafted Single Name Necklaces at Erroneous Gold. Create your personalized name necklace – a stylish and meaningful accessory or gift.",
+    "Discover elegant gold, silver, and diamond rings at Ruveri Jewel. Explore beautifully crafted designer rings perfect for everyday wear, engagements, and special occasions. Worldwide shipping available.",
   keywords: [
-    "single name necklace",
-    "custom name necklace",
-    "personalized jewelry",
-    "engraved necklace",
-    "name pendant",
-    "custom name jewelry",
-    "personalized necklace india",
-    "name necklace gift",
-    "erroneous gold",
+    "gold rings",
+    "diamond rings",
+    "silver rings",
+    "rings for women",
+    "designer rings",
+    "luxury rings",
+    "buy rings online",
+    "engagement rings",
+    "gold jewelry",
+    "diamond jewelry",
+    "silver jewelry",
+    "Ruveri Jewel"
   ],
-  openGraph: {
-    title: "Custom Single Name Necklaces | Erroneous Gold",
+
+  logo1Graph: {
+    title: "Luxury Gold, Silver & Diamond Rings | Ruveri Jewel",
     description:
-      "Design your own single name necklace with Erroneous Gold. Personalized jewelry handcrafted with care – perfect for daily wear or gifting.",
-    url: "https://erroneousgold.com/singlenamenecklace",
-    siteName: "Erroneous Gold",
+      "Shop stunning gold, silver, and diamond rings at Ruveri Jewel. Elegant ring designs crafted for timeless beauty and modern style.",
+    url: "https://ruverijewel.com/rings",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/logo1.png",
         width: 1200,
         height: 630,
-        alt: "Single Name Necklace – Personalized Jewelry by Erroneous Gold",
+        alt: "Luxury Rings Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Personalized Single Name Necklaces | Erroneous Gold",
+    title: "Designer Gold, Silver & Diamond Rings | Ruveri Jewel",
     description:
-      "Shop elegant, custom-made single name necklaces. Personalized jewelry handcrafted with love by Erroneous Gold.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Explore the premium ring collection at Ruveri Jewel. Shop elegant gold, silver, and diamond rings crafted for every occasion.",
+    images: ["https://ruverijewel.com/logo1.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/singlenamenecklace",
+    canonical: "https://ruverijewel.com/rings",
   },
 };
 

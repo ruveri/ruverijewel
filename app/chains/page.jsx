@@ -1,46 +1,51 @@
 import Products from "../nopage/home/Products";
 
 export const metadata = {
-  title: "Couple Name Keychains – Personalized Keychains for Couples | Erroneous Gold",
+  title: "Gold, Silver & Diamond Chains for Men & Women | Ruveri Jewel",
   description:
-    "Shop custom Couple Name Keychains at Erroneous Gold. Create personalized keychains with both names — a thoughtful symbol of love and togetherness, perfect for gifting.",
+    "Discover premium gold, silver, and diamond chains at Ruveri Jewel. Elegant chain designs crafted with precision for men and women. Luxury jewelry with worldwide shipping.",
   keywords: [
-    "couple name keychain",
-    "personalized keychain",
-    "custom name keychain",
-    "keychain for couples",
-    "engraved keychain",
-    "relationship gift",
-    "custom couple gift",
-    "personalized accessories",
-    "erroneous gold",
+    "gold chains",
+    "silver chains",
+    "diamond chains",
+    "chains for women",
+    "chains for men",
+    "luxury chains",
+    "designer chains",
+    "buy chains online",
+    "gold jewelry",
+    "diamond jewelry",
+    "silver jewelry",
+    "Ruveri Jewel",
   ],
-  openGraph: {
-    title: "Custom Couple Name Keychains | Erroneous Gold",
+
+  logo1Graph: {
+    title: "Luxury Gold, Silver & Diamond Chains | Ruveri Jewel",
     description:
-      "Design your personalized Couple Name Keychain with Erroneous Gold. A meaningful accessory that celebrates connection and love.",
-    url: "https://erroneousgold.com/ckeychain",
-    siteName: "Erroneous Gold",
+      "Shop elegant gold, silver, and diamond chains from Ruveri Jewel. Timeless jewelry designs crafted for everyday wear and special occasions.",
+    url: "https://ruverijewel.com/chains",
+    siteName: "Ruveri Jewel",
     images: [
       {
-        url: "https://erroneousgold.com/open.png",
+        url: "https://ruverijewel.com/logo1.png",
         width: 1200,
         height: 630,
-        alt: "Couple Name Keychain – Personalized Gift by Erroneous Gold",
+        alt: "Luxury Chains Collection by Ruveri Jewel",
       },
     ],
-    locale: "en_IN",
-    
+    locale: "en_US",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Personalized Couple Name Keychains | Erroneous Gold",
+    title: "Designer Gold, Silver & Diamond Chains | Ruveri Jewel",
     description:
-      "Create a custom Couple Name Keychain — the perfect personalized gift for your partner, handcrafted with care by Erroneous Gold.",
-    images: ["https://erroneousgold.com/open.png"],
+      "Explore the elegant chains collection by Ruveri Jewel. Shop premium gold, silver, and diamond chains designed for modern style.",
+    images: ["https://ruverijewel.com/logo1.png"],
   },
+
   alternates: {
-    canonical: "https://erroneousgold.com/ckeychain",
+    canonical: "https://ruverijewel.com/chains",
   },
 };
 

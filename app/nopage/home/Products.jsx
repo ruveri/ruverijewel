@@ -99,7 +99,7 @@ export default function Products({ category, title }) {
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(true);
 
-  const purityOptions = ["9K", "14K", "18K", "925 Silver", "900 Silver"];
+  const purityOptions = ["9K", "14K", "18K", "925 Silver",];
 
   const togglePurity = (purity) => {
     setSelectedPurities(prev =>

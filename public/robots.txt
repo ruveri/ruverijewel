@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://ruverijewel.com
+
+# Sitemaps
+Sitemap: https://ruverijewel.com/sitemap.xml

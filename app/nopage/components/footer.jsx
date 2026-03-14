@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   Instagram,
   Youtube,
@@ -27,70 +28,123 @@ export default function LuxuryFooter() {
 
           {/* LEFT SIDE */}
           <div className="space-y-6">
+
             {/* Social Icons */}
             <div className="flex gap-4">
-              {[
-                Instagram,
-                Youtube,
-                Twitter,
-                Facebook,
-              ].map((Icon, i) => (
-                <div
-                  key={i}
-                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black  transition cursor-pointer"
-                >
-                  <Icon size={18} />
-                </div>
-              ))}
+
+              <Link
+                href="https://instagram.com"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
+              >
+                <Instagram size={18} />
+              </Link>
+
+              <Link
+                href="https://youtube.com"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
+              >
+                <Youtube size={18} />
+              </Link>
+
+              <Link
+                href="https://twitter.com"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
+              >
+                <Twitter size={18} />
+              </Link>
+
+              <Link
+                href="https://facebook.com"
+                target="_blank"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
+              >
+                <Facebook size={18} />
+              </Link>
+
             </div>
 
-            {/* Logo Image */}
+            {/* Logo Image (Clickable to Home) */}
             <div className="pt-2">
-              <Image
-                src="/logo.webp" // your logo
-                alt="Brand Logo"
-                width={500}
-                height={60}
-                className="object-contain"
-              />
+              <Link href="/">
+                <Image
+                  src="/logo.webp"
+                  alt="Brand Logo"
+                  width={500}
+                  height={60}
+                  className="object-contain"
+                />
+              </Link>
             </div>
           </div>
 
-          {/* RIGHT SIDE LINKS (Fully Right Aligned) */}
+          {/* RIGHT SIDE LINKS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 text-black md:justify-self-end text-left">
+
+            {/* Customer Care */}
             <div>
               <h4 className="mb-4 uppercase tracking-widest text-md opacity-80">
                 Customer Care
               </h4>
+
               <ul className="space-y-3 text-sm opacity-90">
-                <li className="hover:opacity-70 cursor-pointer">
-                  Book an Appointment
+
+                <li>
+                  <Link href="/my-orders" className="hover:opacity-70">
+                    My Order
+                  </Link>
                 </li>
-                <li className="hover:opacity-70 cursor-pointer">
-                  Contact Us
+                <li>
+                  <Link href="/certificates" className="hover:opacity-70">
+                    Certificates
+                  </Link>
                 </li>
-                <li className="hover:opacity-70 cursor-pointer">
-                  FAQ
+
+                <li>
+                  <a
+                    href="mailto:ruverijewel@gmail.com"
+                    className="hover:opacity-70"
+                  >
+                    Contact Us
+                  </a>
                 </li>
+
+
+
               </ul>
             </div>
 
+            {/* Information */}
             <div>
               <h4 className="mb-4 uppercase tracking-widest text-md opacity-80">
                 Information
               </h4>
+
               <ul className="space-y-3 text-sm opacity-90">
-                <li className="hover:opacity-70 cursor-pointer">
-                  Certificates
+
+                <li>
+                  <Link href="/exchange-policy" className="hover:opacity-70">
+                    Exchange Policy
+                  </Link>
                 </li>
-                <li className="hover:opacity-70 cursor-pointer">
-                  Privacy Policy
+
+                <li>
+                  <Link href="/privacy-policy" className="hover:opacity-70">
+                    Privacy Policy
+                  </Link>
                 </li>
-                <li className="hover:opacity-70 cursor-pointer">
-                  Terms & Conditions
+
+                <li>
+                  <Link href="/terms-and-conditions" className="hover:opacity-70">
+                    Terms & Conditions
+                  </Link>
                 </li>
+
               </ul>
             </div>
+
           </div>
 
         </div>

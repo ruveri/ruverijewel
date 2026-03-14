@@ -164,7 +164,7 @@ export default function ExchangePolicyPage() {
             className="text-center text-[#5a4a3a] text-base md:text-lg leading-relaxed mb-8"
             style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            We want you to love every piece you receive. If something isn't right, we're here to make it right — fairly and transparently.
+            We want you to love every piece you receive. If something isn&apos;t right, we&apos;re here to make it right — fairly and transparently.
           </p>
           {/* 3 key highlights */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -291,7 +291,7 @@ export default function ExchangePolicyPage() {
             Need help with an exchange?
           </h2>
           <p className="text-white/50 text-sm mb-8 leading-relaxed">
-            Write to us with your order number and unboxing video and we'll take it from there.
+            Write to us with your order number and unboxing video and we&apos;ll take it from there.
           </p>
           <a
             href="mailto:ruverijewel@gmail.com"

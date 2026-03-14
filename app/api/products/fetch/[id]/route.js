@@ -29,15 +29,28 @@ const getPurityMultiplier = (metal, purity) => {
   return 1;
 };
 
+/* ------------------ PRICE CALCULATOR ------------------ */
+const calcTotalPrice = (product) => {
+  // Silver: metalPrice IS the final price
+  if (product.metal === "silver") {
+    return Number(product.metalPrice) || 0;
+  }
+
+  // Gold: standard formula
+  const netWeight     = Number(product.netWeight)     || 0;
+  const metalPrice    = Number(product.metalPrice)    || 0;
+  const makingCharges = Number(product.makingCharges) || 0;
+  const diamondPrice  = Number(product.diamondPrice)  || 0;
+  const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
+
+  return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice);
+};
+
 export async function GET(req, { params }) {
-  // ✅ FIXED: Await params before accessing properties
   const { id } = await params;
 
   if (!id) {
-    return NextResponse.json(
-      { message: "Invalid product ID" },
-      { status: 400 }
-    );
+    return NextResponse.json({ message: "Invalid product ID" }, { status: 400 });
   }
 
   const authKey = req.headers.get("x-api-key");
@@ -51,36 +64,15 @@ export async function GET(req, { params }) {
     const product = await Product.findById(id);
 
     if (!product || product.status !== "live") {
-      return NextResponse.json(
-        { message: "Product not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
-
-    /* ------------------ SERVER-SIDE PRICE CALC ------------------ */
-    const netWeight = Number(product.netWeight) || 0;
-    const metalPrice = Number(product.metalPrice) || 0;
-    const makingCharges = Number(product.makingCharges) || 0;
-    const diamondPrice = Number(product.diamondPrice) || 0;
-
-    const purityMultiplier = getPurityMultiplier(
-      product.metal,
-      product.purity
-    );
-
-    const totalPrice = Math.ceil(
-      netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice
-    );
 
     return NextResponse.json({
       ...product.toObject(),
-      totalPrice, // ✅ ALWAYS PRESENT
+      totalPrice: calcTotalPrice(product),
     });
   } catch (error) {
     console.error("PRODUCT FETCH ERROR:", error);
-    return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

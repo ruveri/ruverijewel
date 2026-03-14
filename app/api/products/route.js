@@ -29,6 +29,23 @@ const getPurityMultiplier = (metal, purity) => {
   return 1;
 };
 
+/* ------------------ PRICE CALCULATOR ------------------ */
+const calcTotalPrice = (product) => {
+  // Silver: metalPrice IS the final price
+  if (product.metal === "silver") {
+    return Number(product.metalPrice) || 0;
+  }
+
+  // Gold: standard formula
+  const netWeight     = Number(product.netWeight)     || 0;
+  const metalPrice    = Number(product.metalPrice)    || 0;
+  const makingCharges = Number(product.makingCharges) || 0;
+  const diamondPrice  = Number(product.diamondPrice)  || 0;
+  const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
+
+  return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice);
+};
+
 export async function GET(req) {
   const authKey = req.headers.get("x-api-key");
   if (!authKey || authKey !== API_KEY) {
@@ -36,11 +53,11 @@ export async function GET(req) {
   }
 
   const url = new URL(req.url);
-  const page = parseInt(url.searchParams.get("page")) || 1;
-  const limit = parseInt(url.searchParams.get("limit")) || 20;
+  const page     = parseInt(url.searchParams.get("page"))  || 1;
+  const limit    = parseInt(url.searchParams.get("limit")) || 20;
   const category = url.searchParams.get("category");
-  const purity = url.searchParams.get("purity"); // ← new
-  const skip = (page - 1) * limit;
+  const purity   = url.searchParams.get("purity");
+  const skip     = (page - 1) * limit;
 
   try {
     await dbConnect();
@@ -48,7 +65,6 @@ export async function GET(req) {
     const query = { status: "live" };
     if (category) query.category = category;
 
-    // Support single purity ("14K") or comma-separated ("9K,18K")
     if (purity) {
       const purities = purity.split(",").map(p => p.trim()).filter(Boolean);
       query.purity = purities.length === 1 ? purities[0] : { $in: purities };
@@ -56,35 +72,14 @@ export async function GET(req) {
 
     const products = await Product.find(query).skip(skip).limit(limit);
 
-    /* ------------------ SERVER-SIDE PRICE CALC ------------------ */
-    const secureProducts = products.map((product) => {
-      const netWeight = Number(product.netWeight) || 0;
-      const metalPrice = Number(product.metalPrice) || 0;
-      const makingCharges = Number(product.makingCharges) || 0;
-      const diamondPrice = Number(product.diamondPrice) || 0;
-
-      const purityMultiplier = getPurityMultiplier(
-        product.metal,
-        product.purity
-      );
-
-      const rawTotal =
-        netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice;
-
-      const totalPrice = Math.ceil(rawTotal);
-
-      return {
-        ...product.toObject(),
-        totalPrice,
-      };
-    });
+    const secureProducts = products.map((product) => ({
+      ...product.toObject(),
+      totalPrice: calcTotalPrice(product),
+    }));
 
     return NextResponse.json(secureProducts);
   } catch (error) {
     console.error("PRODUCT FETCH ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

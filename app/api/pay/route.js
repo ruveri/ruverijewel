@@ -26,6 +26,23 @@ const getPurityMultiplier = (metal, purity) => {
   return 1;
 };
 
+/* ── Price calculator (single source of truth) ───────────────────────────── */
+const calcUnitPrice = (product) => {
+  // Silver: metalPrice IS the final price
+  if (product.metal === "silver") {
+    return Number(product.metalPrice) || 0;
+  }
+
+  // Gold: standard formula
+  const netWeight        = Number(product.netWeight)     || 0;
+  const metalPrice       = Number(product.metalPrice)    || 0;
+  const makingCharges    = Number(product.makingCharges) || 0;
+  const diamondPrice     = Number(product.diamondPrice)  || 0;
+  const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
+
+  return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice);
+};
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -49,18 +66,7 @@ export async function POST(req) {
         );
       }
 
-      const netWeight = Number(product.netWeight) || 0;
-      const metalPrice = Number(product.metalPrice) || 0;
-      const makingCharges = Number(product.makingCharges) || 0;
-      const diamondPrice = Number(product.diamondPrice) || 0;
-
-      const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
-
-      const unitPrice = Math.ceil(
-        netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice
-      );
-
-      subtotal += unitPrice * item.quantity;
+      subtotal += calcUnitPrice(product) * item.quantity;
     }
 
     // ── Validate shipping charge ────────────────────────────────────────────

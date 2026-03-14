@@ -28,6 +28,11 @@ const getPurityMultiplier = (metal, purity) => {
 const calculateTotalPrice = (product) => {
   if (!product) return 0;
   try {
+    // Silver: metalPrice IS the final price
+    if (product.metal === "silver") {
+      return Number(product.metalPrice) || 0;
+    }
+    // Gold: standard formula
     const netWeight = Number(product.netWeight) || 0;
     const metalPrice = Number(product.metalPrice) || 0;
     const makingCharges = Number(product.makingCharges) || 0;
@@ -52,7 +57,6 @@ const SizeSelector = ({ category, selectedSize, onSelectSize, sizeError }) => {
 
   return (
     <div className="space-y-3">
-      {/* Bangle single-piece notice */}
       {category === "bangles" && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
           <span className="text-amber-500 text-base mt-0.5 flex-shrink-0">ⓘ</span>
@@ -62,7 +66,6 @@ const SizeSelector = ({ category, selectedSize, onSelectSize, sizeError }) => {
           </p>
         </div>
       )}
-
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-800">{label}</p>
         {selectedSize && (
@@ -71,7 +74,6 @@ const SizeSelector = ({ category, selectedSize, onSelectSize, sizeError }) => {
           </span>
         )}
       </div>
-
       <div className="flex flex-wrap gap-2">
         {sizes.map((size) => {
           const isSelected = String(selectedSize) === String(size);
@@ -93,8 +95,6 @@ const SizeSelector = ({ category, selectedSize, onSelectSize, sizeError }) => {
           );
         })}
       </div>
-
-      {/* Error message */}
       {sizeError && (
         <motion.p
           initial={{ opacity: 0, y: -4 }}
@@ -113,6 +113,66 @@ const PriceBreakdown = ({ product }) => {
   const [openBreakdown, setOpenBreakdown] = useState(false);
   if (!product) return null;
 
+  const isSilver = product.metal === "silver";
+
+  // ── Silver: flat price, no formula ──────────────────────────────────────
+  if (isSilver) {
+    const totalPrice = Number(product.metalPrice) || 0;
+    return (
+      <div className="mt-4">
+        <button
+          onClick={() => setOpenBreakdown(!openBreakdown)}
+          className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors"
+        >
+          <span className="text-base sm:text-lg font-medium">Price Breakdown</span>
+          <span className="text-xl sm:text-2xl">{openBreakdown ? "−" : "+"}</span>
+        </button>
+        {openBreakdown && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="overflow-hidden"
+          >
+            <div className="py-6 space-y-4">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Component</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    <tr>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        <div className="font-medium">Silver Product Price</div>
+                        <div className="text-xs text-gray-500">{product.purity} — fixed price</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">₹{totalPrice.toLocaleString()}</td>
+                    </tr>
+                    <tr className="bg-gray-100">
+                      <td className="px-4 py-3"><div className="text-sm font-bold text-black">Final Price</div></td>
+                      <td className="px-4 py-3"><div className="text-lg font-bold text-black">₹{totalPrice.toLocaleString()}</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <h5 className="text-sm font-medium text-blue-800 mb-2">Important Notes:</h5>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Price includes all charges (making, GST, etc.)</li>
+                  <li>• BIS Hallmarked — {product.purity} certified silver</li>
+                  <li>• All prices are in Indian Rupees (₹)</li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Gold: full formula breakdown ─────────────────────────────────────────
   const netWeight = Number(product.netWeight) || 0;
   const metalPrice = Number(product.metalPrice) || 0;
   const makingCharges = Number(product.makingCharges) || 0;
@@ -134,7 +194,6 @@ const PriceBreakdown = ({ product }) => {
         <span className="text-base sm:text-lg font-medium">Price Breakdown</span>
         <span className="text-xl sm:text-2xl">{openBreakdown ? "−" : "+"}</span>
       </button>
-
       {openBreakdown && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -148,10 +207,9 @@ const PriceBreakdown = ({ product }) => {
                 Total Price = (Net Weight × Metal Price of <strong>pure metal</strong> × Purity Multiplier) + Diamond Price + Making Charges (includes GST)
               </p>
               <p className="text-xs text-gray-500">
-                <em>Purity Multiplier converts pure metal price (24K gold / 999 silver) to the actual product purity</em>
+                <em>Purity Multiplier converts pure metal price (24K gold) to the actual product purity</em>
               </p>
             </div>
-
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -168,7 +226,7 @@ const PriceBreakdown = ({ product }) => {
                       <div className="text-xs text-gray-500">
                         {product.metal.charAt(0).toUpperCase() + product.metal.slice(1)} ({product.purity})
                         <span className="block text-xs text-gray-400">
-                          Price for pure {product.metal === "gold" ? "24K gold" : "999 silver"}, converted via Purity Multiplier ({purityMultiplier})
+                          Price for pure 24K gold, converted via Purity Multiplier ({purityMultiplier})
                         </span>
                       </div>
                     </td>
@@ -215,7 +273,6 @@ const PriceBreakdown = ({ product }) => {
                 </tbody>
               </table>
             </div>
-
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <h5 className="text-sm font-medium text-blue-800 mb-2">Important Notes:</h5>
               <ul className="text-xs text-blue-700 space-y-1">
@@ -372,19 +429,14 @@ export default function ProductDetail() {
   const [loginPrompt, setLoginPrompt] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
 
-  // ── Size selection state ──
   const [selectedSize, setSelectedSize] = useState("");
   const [sizeError, setSizeError] = useState(false);
 
-  // Categories that require size selection
-  const requiresSize = (category) =>
-    category === "rings" || category === "bangles";
+  const requiresSize = (category) => category === "rings" || category === "bangles";
 
-  // Validate size before cart/buy actions
   const validateSize = () => {
     if (requiresSize(product?.category) && !selectedSize) {
       setSizeError(true);
-      // Scroll to size selector smoothly
       document.getElementById("size-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return false;
     }
@@ -459,7 +511,6 @@ export default function ProductDetail() {
     }
   };
 
-  // Build the cart item payload (includes size if applicable)
   const buildCartItem = (productData, price) => ({
     id: productData._id || slug,
     productName: productData.productName,
@@ -469,7 +520,7 @@ export default function ProductDetail() {
     metal: productData.metal,
     purity: productData.purity,
     weight: productData.netWeight,
-    size: selectedSize || null,           // ← size stored here
+    size: selectedSize || null,
     description: productData.description,
     category: productData.category,
     grossWeight: productData.grossWeight,
@@ -481,8 +532,7 @@ export default function ProductDetail() {
   });
 
   const handleAddToCart = async () => {
-    if (!validateSize()) return;           // ← block if size missing
-
+    if (!validateSize()) return;
     const user = getLoggedInUser();
     if (!user?.email) {
       try {
@@ -498,8 +548,7 @@ export default function ProductDetail() {
   };
 
   const handleBuyNow = async () => {
-    if (!validateSize()) return;           // ← block if size missing
-
+    if (!validateSize()) return;
     const user = getLoggedInUser();
     if (!user?.email) {
       try {
@@ -529,7 +578,6 @@ export default function ProductDetail() {
     else { updateQuantity(productId, 0); setQuantity(0); }
   };
 
-  /* ---- Loading skeleton ---- */
   if (loading) {
     return (
       <div className="bg-back min-h-screen ci">
@@ -557,6 +605,7 @@ export default function ProductDetail() {
     );
   }
 
+  const isSilver = product.metal === "silver";
   const allImages = [product.img1, product.img2, product.img3].filter(Boolean);
   const isInWishlist = wishlist.includes(String(slug));
   const totalPrice = calculateTotalPrice(product);
@@ -645,32 +694,40 @@ export default function ProductDetail() {
             <p className="text-xs sm:text-sm text-gray-600">
               {product.category === "bangles"
                 ? "Price is for 1 bangle (sold individually, not as a pair)"
-                : "Includes making charges"}
+                : isSilver
+                  ? "Inclusive of all charges"
+                  : "Includes making charges"}
             </p>
           </div>
 
-          {/* Product Specs */}
+          {/* Product Specs — silver hides Net Weight & Diamond Price, shows Gross Weight & Purity */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 py-4 sm:py-6 border-y border-gray-200">
             <div><p className="text-xs sm:text-sm text-gray-500">Metal</p><p className="font-medium capitalize text-sm sm:text-base">{product.metal}</p></div>
             <div><p className="text-xs sm:text-sm text-gray-500">Purity</p><p className="font-medium text-sm sm:text-base">{product.purity}</p></div>
-            <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
-            <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
+            {isSilver ? (
+              <>
+                <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
+                <div><p className="text-xs sm:text-sm text-gray-500">Color</p><p className="font-medium capitalize text-sm sm:text-base">{product.color || "Silver"}</p></div>
+              </>
+            ) : (
+              <>
+                <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
+                <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
+              </>
+            )}
           </div>
 
-          {/* ── SIZE SELECTOR (rings & bangles only) ── */}
+          {/* SIZE SELECTOR */}
           <div id="size-selector">
             <SizeSelector
               category={product.category}
               selectedSize={selectedSize}
-              onSelectSize={(size) => {
-                setSelectedSize(size);
-                setSizeError(false); // clear error when size is picked
-              }}
+              onSelectSize={(size) => { setSelectedSize(size); setSizeError(false); }}
               sizeError={sizeError}
             />
           </div>
 
-          {/* ── ACTIONS ── */}
+          {/* ACTIONS */}
           <div className="space-y-4">
             {quantity > 0 ? (
               <div className="space-y-3">
@@ -679,7 +736,6 @@ export default function ProductDetail() {
                   <span className="px-4 py-2.5 sm:px-6 sm:py-3 border-x border-black flex-1 text-center font-medium">{quantity}</span>
                   <button onClick={increaseQuantity} className="px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-gray-100 transition-colors flex-1 text-center">+</button>
                 </div>
-                {/* Show selected size badge in cart state */}
                 {selectedSize && (
                   <p className="text-center text-xs text-gray-500">
                     Size: <strong>{selectedSize}</strong>
@@ -733,9 +789,14 @@ export default function ProductDetail() {
                 <div><p className="text-xs sm:text-sm text-gray-500">Color</p><p className="font-medium text-sm sm:text-base capitalize">{product.color || "Classic"}</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Gender</p><p className="font-medium text-sm sm:text-base capitalize">{product.gender}</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
-                <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
-                <div><p className="text-xs sm:text-sm text-gray-500">Making Charges</p><p className="font-medium text-sm sm:text-base">₹{product.makingCharges?.toLocaleString() || 0}</p></div>
-                <div><p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p><p className="font-medium text-sm sm:text-base capitalize">{product.diamondWeight} CT</p></div>
+                {/* Hide net weight, diamond weight, making charges for silver */}
+                {!isSilver && (
+                  <>
+                    <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
+                    <div><p className="text-xs sm:text-sm text-gray-500">Making Charges</p><p className="font-medium text-sm sm:text-base">₹{product.makingCharges?.toLocaleString() || 0}</p></div>
+                    <div><p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p><p className="font-medium text-sm sm:text-base">{product.diamondWeight} CT</p></div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

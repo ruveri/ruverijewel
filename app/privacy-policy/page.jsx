@@ -268,7 +268,7 @@ export default function PrivacyPolicyPage() {
             Questions about your privacy?
           </h2>
           <p className="text-white/50 text-sm mb-8 leading-relaxed">
-            We're here to help. Reach out to us and we'll respond as soon as possible.
+            We&apos;re here to help. Reach out to us and we&apos;ll respond as soon as possible.
           </p>
           <a
             href="mailto:ruverijewel@gmail.com"

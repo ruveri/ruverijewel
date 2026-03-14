@@ -279,7 +279,7 @@ export default function TermsAndConditionsPage() {
             Have questions about our terms?
           </h2>
           <p className="text-white/50 text-sm mb-8 leading-relaxed">
-            We're happy to help. Write to us and we'll get back to you as soon as possible.
+            We&apos;re happy to help. Write to us and we&apos;ll get back to you as soon as possible.
           </p>
           <a
             href="mailto:ruverijewel@gmail.com"

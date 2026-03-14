@@ -52,7 +52,7 @@ export default function Home() {
   return (
     <>
       <Products
-        category="pendants"
+        category="pendents"
         title="Pendants"
       />
     </>

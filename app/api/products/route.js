@@ -39,6 +39,7 @@ export async function GET(req) {
   const page = parseInt(url.searchParams.get("page")) || 1;
   const limit = parseInt(url.searchParams.get("limit")) || 20;
   const category = url.searchParams.get("category");
+  const purity = url.searchParams.get("purity"); // ← new
   const skip = (page - 1) * limit;
 
   try {
@@ -46,6 +47,12 @@ export async function GET(req) {
 
     const query = { status: "live" };
     if (category) query.category = category;
+
+    // Support single purity ("14K") or comma-separated ("9K,18K")
+    if (purity) {
+      const purities = purity.split(",").map(p => p.trim()).filter(Boolean);
+      query.purity = purities.length === 1 ? purities[0] : { $in: purities };
+    }
 
     const products = await Product.find(query).skip(skip).limit(limit);
 
@@ -68,7 +75,7 @@ export async function GET(req) {
 
       return {
         ...product.toObject(),
-        totalPrice, // ✅ FINAL, TRUSTED PRICE
+        totalPrice,
       };
     });
 

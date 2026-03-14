@@ -21,10 +21,6 @@ const ProductSkeleton = () => (
   </div>
 );
 
-// ─── Image with stable caching (never re-fetches once loaded) ─────────────────
-// data-loaded drives CSS opacity for initial load-in.
-// Hover swap is handled by the parent container's CSS — no inline opacity here
-// so group-hover Tailwind classes work without conflict.
 const imageCache = new Set();
 
 const CachedImage = ({ src, alt, className }) => {
@@ -51,9 +47,6 @@ const CachedImage = ({ src, alt, className }) => {
   );
 };
 
-// ─── Hover image swap with smooth fade animation ──────────────────────────────
-// Uses React state for hover so the transition is fully decoupled from
-// CachedImage's load-state opacity — both work independently.
 const HoverImageContainer = ({ img1, img2, alt }) => {
   const [hovered, setHovered] = useState(false);
   return (
@@ -62,14 +55,12 @@ const HoverImageContainer = ({ img1, img2, alt }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* img1 — fades out on hover */}
       <div
         className="absolute inset-0 w-full h-full"
         style={{ opacity: hovered ? 0 : 1, transition: "opacity 0.5s ease" }}
       >
         <CachedImage src={img1} alt={alt} className="w-full h-full object-cover" />
       </div>
-      {/* img2 — fades in on hover */}
       <div
         className="absolute inset-0 w-full h-full"
         style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.5s ease" }}
@@ -91,15 +82,28 @@ export default function Products({ category, title }) {
   const [selectedFilter, setSelectedFilter] = useState(null);
   const filterRef = useRef(null);
 
-  const { loginWithGoogle, isLoggedIn, getLoggedInUser } = useGoogleAuth();
+  const { loginWithGoogle, getLoggedInUser } = useGoogleAuth();
 
-  // Purity filter — when empty AND no sort filter → default to 14K only
   const [selectedPurities, setSelectedPurities] = useState([]);
-
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(true);
 
-  const purityOptions = ["9K", "14K", "18K", "925 Silver",];
+  const purityOptions = ["9K", "14K", "18K", "925 Silver"];
+
+  // ─── Active purity sent to API ─────────────────────────────────────────────
+  // This is the key fix: purity filtering is done by the API/database,
+  // NOT by filtering the already-fetched client-side array.
+  //
+  // Rules:
+  //   • User selected purities       → send those purities to API
+  //   • Price sort + nothing selected → send nothing (fetch all purities)
+  //   • Default (no selection, no price sort) → send "14K" to API
+  const activePurityParam = useMemo(() => {
+    const isPriceSort = selectedFilter === "price_low_high" || selectedFilter === "price_high_low";
+    if (selectedPurities.length > 0) return selectedPurities.join(",");
+    if (isPriceSort) return ""; // all purities — let price sort work across them
+    return "14K";               // default: only show 14K
+  }, [selectedPurities, selectedFilter]);
 
   const togglePurity = (purity) => {
     setSelectedPurities(prev =>
@@ -175,7 +179,7 @@ export default function Products({ category, title }) {
     }
   };
 
-  // ─── Outside click for filter dropdown ────────────────────────────────────
+  // ─── Outside click ─────────────────────────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (filterRef.current && !filterRef.current.contains(e.target)) setIsFilterOpen(false);
@@ -184,26 +188,29 @@ export default function Products({ category, title }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ─── Reset on category change ──────────────────────────────────────────────
+  // ─── Reset + re-fetch when category or active purity param changes ─────────
+  // Changing purity pill or sort resets to page 1 and hits the API fresh —
+  // never relies on filtering already-loaded client data.
   useEffect(() => {
     setProducts([]);
-    setSelectedPurities([]);
     setPage(1);
     setHasMore(true);
     setLoading(true);
-  }, [category]);
+  }, [category, activePurityParam]);
 
-  // ─── Fetch products ────────────────────────────────────────────────────────
+  // ─── Fetch from API with purity baked into query ───────────────────────────
   useEffect(() => {
     if (category) fetchProducts();
-  }, [page, category]);
+  }, [page, category, activePurityParam]);
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(
-        `/api/products?page=${page}&limit=${limit}&category=${encodeURIComponent(category)}`,
-        { headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY } }
-      );
+      let url = `/api/products?page=${page}&limit=${limit}&category=${encodeURIComponent(category)}`;
+      if (activePurityParam) url += `&purity=${encodeURIComponent(activePurityParam)}`;
+
+      const res = await fetch(url, {
+        headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY },
+      });
       const data = await res.json();
       if (data.length < limit) setHasMore(false);
       setProducts(prev => {
@@ -217,36 +224,21 @@ export default function Products({ category, title }) {
     }
   };
 
-  // ─── Filter + Sort logic ───────────────────────────────────────────────────
-  // Rule: if no purity filters AND filter is null or "alphabetical" → show only 14K
+  // ─── Client-side sort only (filtering is now server-side) ─────────────────
   const displayProducts = useMemo(() => {
-    let result = [...products];
-
-    const isPriceSort = selectedFilter === "price_low_high" || selectedFilter === "price_high_low";
-
-    if (selectedPurities.length > 0) {
-      // User has explicitly chosen purities → respect that
-      result = result.filter(p => selectedPurities.includes(p.purity));
-    } else if (!isPriceSort) {
-      // No purity filter + no price sort → default to 14K only
-      result = result.filter(p => p.purity === "14K");
-    }
-
-    // Sort
+    const result = [...products];
     if (selectedFilter === "price_low_high") {
-      result.sort((a, b) => (a.totalPrice ?? a.originalPrice ?? 0) - (b.totalPrice ?? b.originalPrice ?? 0));
+      result.sort((a, b) => (a.totalPrice ?? 0) - (b.totalPrice ?? 0));
     } else if (selectedFilter === "price_high_low") {
-      result.sort((a, b) => (b.totalPrice ?? b.originalPrice ?? 0) - (a.totalPrice ?? a.originalPrice ?? 0));
+      result.sort((a, b) => (b.totalPrice ?? 0) - (a.totalPrice ?? 0));
     } else if (selectedFilter === "alphabetical") {
       result.sort((a, b) => (a.productName ?? "").localeCompare(b.productName ?? ""));
     }
-
     return result;
-  }, [products, selectedPurities, selectedFilter]);
+  }, [products, selectedFilter]);
 
   const loadMore = () => { if (hasMore && !loading) setPage(prev => prev + 1); };
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-back ci my-6">
       <style>{`
@@ -412,7 +404,7 @@ export default function Products({ category, title }) {
           </div>
         )}
 
-        {/* ── Initial skeleton (first load) ── */}
+        {/* ── Initial skeleton ── */}
         {loading && products.length === 0 && (
           <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
             {[...Array(8)].map((_, i) => <ProductSkeleton key={i} />)}
@@ -428,9 +420,7 @@ export default function Products({ category, title }) {
             transition={{ duration: 0.4 }}
           >
             {displayProducts.map((product, index) => {
-              if (wishlistLoading) {
-                return <ProductSkeleton key={product._id} />;
-              }
+              if (wishlistLoading) return <ProductSkeleton key={product._id} />;
 
               const isInWishlist = wishlist.includes(String(product._id));
 
@@ -444,7 +434,6 @@ export default function Products({ category, title }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Wishlist button */}
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product._id); }}
                     className="absolute top-2 right-2 z-10 p-2 bg-back rounded-full backdrop-blur-sm"
@@ -461,13 +450,11 @@ export default function Products({ category, title }) {
 
                   <Link href={`/products/${product._id}`}>
                     <div>
-                      {/* Image container - img2 fades in on hover */}
                       <HoverImageContainer
                         img1={product.img1}
                         img2={product.img2}
                         alt={product.productName}
                       />
-
                       <div className="py-4 px-1 text-start">
                         <h2 className="text-sm lg:text-lg font-semibold text-black">{product.productName}</h2>
                         <div className="flex justify-start items-center">
@@ -482,7 +469,6 @@ export default function Products({ category, title }) {
               );
             })}
 
-            {/* Skeleton rows while fetching next page */}
             {loading && [...Array(4)].map((_, i) => <ProductSkeleton key={`skel-${i}`} />)}
           </motion.div>
         )}

@@ -77,13 +77,13 @@ export default function ContactPage() {
             {/* ── Heading ── */}
             <h1 className="fade-up d2 text-center text-5xl md:text-7xl font-light leading-none mb-4"
               style={{ fontFamily: "'Cormorant Garamond', serif", letterSpacing: "-0.01em" }}>
-              Let's <em className="italic gold-shimmer">Talk.</em>
+              Let&apos;s <em className="italic gold-shimmer">Talk.</em>
             </h1>
 
             {/* ── Subline ── */}
             <p className="fade-up d3 text-center text-[#8a7a6a] text-sm leading-relaxed mb-12"
               style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300, letterSpacing: "0.03em" }}>
-              We'd love to hear from you — whether it's a bespoke enquiry,<br className="hidden sm:block" />
+              We&apos;d love to hear from you — whether it&apos;s a bespoke enquiry,<br className="hidden sm:block" />
               an order question, or simply a hello.
             </p>
 

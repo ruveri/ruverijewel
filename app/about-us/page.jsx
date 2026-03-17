@@ -186,7 +186,7 @@ export default function AboutPage() {
                 style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>
                 From concept to creation, every piece is designed with meticulous
                 attention to detail, combining fine craftsmanship with personal expression.
-                We don't just make jewellery — we create wearable stories.
+                We don&apos;t just make jewellery — we create wearable stories.
               </p>
               <p className="text-[#b8a898] text-base leading-[2]"
                 style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>
@@ -208,8 +208,8 @@ export default function AboutPage() {
               style={{ fontFamily: "'Jost', sans-serif" }}>Our Promise</p>
             <blockquote className="text-4xl md:text-5xl lg:text-6xl font-light text-[#f0ebe3] leading-tight italic"
               style={{ fontFamily: "'Cormorant Garamond', serif", letterSpacing: "-0.01em" }}>
-              "Ruveri — Your Personal Jeweller<br />
-              <em className="gold-shimmer">for Timeless Elegance."</em>
+              &quot;Ruveri — Your Personal Jeweller<br />
+              <em className="gold-shimmer">for Timeless Elegance.&quot;</em>
             </blockquote>
           </div>
           <div className="divider-line max-w-3xl mx-auto mt-20" />
@@ -347,8 +347,8 @@ export default function AboutPage() {
               </div>
               <blockquote className="text-2xl md:text-3xl font-light text-[#f0ebe3] leading-relaxed italic"
                 style={{ fontFamily: "'Cormorant Garamond', serif", letterSpacing: "0.01em" }}>
-                "Ruveri represents the idea of a personal jeweller — creating bespoke designs
-                that reflect the client's personality, lifestyle, and emotions through fine craftsmanship."
+                &quot;Ruveri represents the idea of a personal jeweller — creating bespoke designs
+                that reflect the client&apos;s personality, lifestyle, and emotions through fine craftsmanship.&quot;
               </blockquote>
             </div>
             <div className="divider-line mt-16" />

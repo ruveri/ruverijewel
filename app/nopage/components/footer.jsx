@@ -33,31 +33,17 @@ export default function LuxuryFooter() {
             <div className="flex gap-4">
 
               <Link
-                href="https://instagram.com"
+                href="https://www.instagram.com/ruveri_jewel?igsh=MTUyYms5aWR0aTVleg%3D%3D&utm_source=qr"
                 target="_blank"
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
               >
                 <Instagram size={18} />
               </Link>
 
-              <Link
-                href="https://youtube.com"
-                target="_blank"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
-              >
-                <Youtube size={18} />
-              </Link>
+            
 
               <Link
-                href="https://twitter.com"
-                target="_blank"
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
-              >
-                <Twitter size={18} />
-              </Link>
-
-              <Link
-                href="https://facebook.com"
+                href="https://www.facebook.com/profile.php?id=61573927306902&rdid=mRhsyzyKydqGunQk&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1Y5FLCUFcq%2F%3Fref%3D1#"
                 target="_blank"
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-black transition"
               >
@@ -102,13 +88,16 @@ export default function LuxuryFooter() {
                   </Link>
                 </li>
 
+                 <li>
+                  <Link href="/contact-us" className="hover:opacity-70">
+                    Contact us
+                  </Link>
+                </li>
+
                 <li>
-                  <a
-                    href="mailto:ruverijewel@gmail.com"
-                    className="hover:opacity-70"
-                  >
-                    Contact Us
-                  </a>
+                  <Link href="/about-us" className="hover:opacity-70">
+                   About Ruveri Jewel
+                  </Link>
                 </li>
 
 

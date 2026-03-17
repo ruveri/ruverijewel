@@ -1,10 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "../../nopage/context/CartContext";
-import ReviewForm from "../../nopage/components/review";
 import Checkout from "../../nopage/checkout/checkout";
 import { XMarkIcon, HeartIcon as HeartOutline, ShareIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
@@ -12,14 +11,8 @@ import { useGoogleAuth } from "../../nopage/components/useGoogleAuth";
 
 /* ---------- PRICE HELPERS ---------- */
 const getPurityMultiplier = (metal, purity) => {
-  const goldMap = {
-    "24K": 1, "22K": 0.916, "20K": 0.833,
-    "18K": 0.78, "14K": 0.615, "9K": 0.415,
-  };
-  const silverMap = {
-    "999 Silver": 1, "950 Silver": 0.95, "925 Silver": 0.925,
-    "900 Silver": 0.9, "800 Silver": 0.8,
-  };
+  const goldMap = { "24K": 1, "22K": 0.916, "20K": 0.833, "18K": 0.78, "14K": 0.615, "9K": 0.415 };
+  const silverMap = { "999 Silver": 1, "950 Silver": 0.95, "925 Silver": 0.925, "900 Silver": 0.9, "800 Silver": 0.8 };
   if (metal === "gold") return goldMap[purity] || 1;
   if (metal === "silver") return silverMap[purity] || 1;
   return 1;
@@ -28,111 +21,229 @@ const getPurityMultiplier = (metal, purity) => {
 const calculateTotalPrice = (product) => {
   if (!product) return 0;
   try {
-    // Silver: metalPrice IS the final price
-    if (product.metal === "silver") {
-      return Number(product.metalPrice) || 0;
-    }
-    // Gold: standard formula
+    if (product.metal === "silver") return Number(product.metalPrice) || 0;
     const netWeight = Number(product.netWeight) || 0;
     const metalPrice = Number(product.metalPrice) || 0;
     const makingCharges = Number(product.makingCharges) || 0;
     const diamondPrice = Number(product.diamondPrice) || 0;
     const purityMultiplier = getPurityMultiplier(product.metal, product.purity);
     return Math.ceil(netWeight * metalPrice * purityMultiplier + makingCharges + diamondPrice);
-  } catch (error) {
-    console.error("Error calculating price:", error);
-    return product.originalPrice || product.totalPrice || 0;
-  }
+  } catch { return product.originalPrice || product.totalPrice || 0; }
+};
+
+/* ---------- SIZE MAPS ---------- */
+const RING_SIZE_MM = {
+  8: "46.8mm", 9: "47.8mm", 10: "48.7mm", 11: "49.7mm", 12: "50.6mm",
+  13: "51.5mm", 14: "52.5mm", 15: "53.4mm", 16: "54.4mm", 17: "55.3mm",
+  18: "56.3mm", 19: "57.2mm", 20: "58.2mm",
+};
+const BANGLE_SIZE_MM = {
+  "2.2": "55.9mm", "2.3": "58.4mm", "2.4": "61.0mm", "2.5": "63.5mm",
+  "2.6": "66.0mm", "2.7": "68.6mm", "2.8": "71.1mm", "2.9": "73.7mm", "2.10": "76.2mm",
 };
 
 /* ---------- SIZE SELECTOR COMPONENT ---------- */
 const SizeSelector = ({ category, selectedSize, onSelectSize, sizeError }) => {
-  const RING_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-  const BANGLE_SIZES = ["2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10"];
+  const [panelOpen, setPanelOpen] = useState(false);
 
   if (category !== "rings" && category !== "bangles") return null;
 
-  const sizes = category === "rings" ? RING_SIZES : BANGLE_SIZES;
-  const label = category === "rings" ? "Ring Size" : "Bangle Size (inches)";
+  const sizes = category === "rings"
+    ? [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    : ["2.2", "2.3", "2.4", "2.5", "2.6", "2.7", "2.8", "2.9", "2.10"];
+
+  const sizeMap = category === "rings" ? RING_SIZE_MM : BANGLE_SIZE_MM;
+  const label = category === "rings" ? "Ring Size" : "Bangle Size";
+
+  const handleSelect = (size) => {
+    onSelectSize(String(size));
+    setPanelOpen(false);
+  };
 
   return (
-    <div className="space-y-3">
-      {category === "bangles" && (
-        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-          <span className="text-amber-500 text-base mt-0.5 flex-shrink-0">ⓘ</span>
-          <p className="text-xs text-amber-800 leading-relaxed">
-            <strong>Price is for 1 bangle.</strong> Bangles are sold individually — not as a pair.
-            To buy a pair, add the same product twice to your cart.
-          </p>
+    <>
+      <div className="space-y-3">
+        {category === "bangles" && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+            <span className="text-amber-500 text-base mt-0.5 flex-shrink-0">ⓘ</span>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              <strong>Price is for 1 bangle.</strong> Bangles are sold individually — not as a pair.
+            </p>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-800">{label}</p>
+          {selectedSize && (
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              Selected: <strong>{selectedSize}</strong>
+              {sizeMap[selectedSize] && <span className="text-gray-400 ml-1">({sizeMap[selectedSize]})</span>}
+            </span>
+          )}
         </div>
-      )}
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-800">{label}</p>
-        {selectedSize && (
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-            Selected: <strong>{selectedSize}</strong>
-          </span>
+
+        {/* Compact row: current selection + button */}
+        <div className="flex items-center gap-3">
+          {selectedSize ? (
+            <div className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-lg text-sm font-medium">
+              <span>{selectedSize}</span>
+              {sizeMap[selectedSize] && <span className="text-white/60 text-xs">{sizeMap[selectedSize]}</span>}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 border-2 border-dashed border-gray-300 px-4 py-2.5 rounded-lg text-sm text-gray-400">
+              No size selected
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setPanelOpen(true)}
+            className="flex items-center gap-2 text-sm font-medium text-black border border-black px-4 py-2.5 rounded-lg hover:bg-black hover:text-white transition-all duration-200"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            {selectedSize ? "Change Size" : "Select Size"}
+          </button>
+        </div>
+
+        {sizeError && (
+          <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-red-500 flex items-center gap-1.5">
+            <span>⚠</span> Please select a size before continuing.
+          </motion.p>
         )}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {sizes.map((size) => {
-          const isSelected = String(selectedSize) === String(size);
-          return (
-            <button
-              key={size}
-              type="button"
-              onClick={() => onSelectSize(String(size))}
-              className={`
-                min-w-[44px] h-10 px-3 text-sm font-medium rounded-lg border-2 transition-all duration-200
-                ${isSelected
-                  ? "bg-black text-white border-black shadow-md scale-105"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-black hover:text-black"
-                }
-              `}
+
+      {/* ── Slide-in panel from LEFT ── */}
+      <AnimatePresence>
+        {panelOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setPanelOpen(false)}
+            />
+            {/* Panel */}
+            <motion.div
+              initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 260 }}
+              className="fixed left-0 top-0 h-full w-full max-w-sm bg-white z-50 shadow-2xl flex flex-col"
             >
-              {size}
-            </button>
-          );
-        })}
-      </div>
-      {sizeError && (
-        <motion.p
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-red-500 flex items-center gap-1.5"
-        >
-          <span>⚠</span> Please select a size before continuing.
-        </motion.p>
-      )}
-    </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 flex-shrink-0">
+                <div>
+                  <h3 className="text-lg font-semibold text-black">Select {label}</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {category === "rings" ? "Indian ring sizes with circumference" : "Standard bangle sizes in inches"}
+                  </p>
+                </div>
+                <button onClick={() => setPanelOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <XMarkIcon className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Grid */}
+              <div className="flex-1 overflow-y-auto px-5 py-5">
+                <div className="grid grid-cols-3 gap-3">
+                  {sizes.map((size) => {
+                    const isSelected = String(selectedSize) === String(size);
+                    const mm = sizeMap[size];
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleSelect(size)}
+                        className={`
+                          flex flex-col items-center justify-center gap-1 p-3 rounded-xl border-2 transition-all duration-200
+                          ${isSelected
+                            ? "border-black bg-black text-white shadow-lg scale-105"
+                            : "border-gray-200 bg-gray-50 text-gray-800 hover:border-gray-400 hover:bg-white"
+                          }
+                        `}
+                      >
+                        <span className="text-xl font-bold leading-none">{size}</span>
+                        {mm && (
+                          <span className={`text-[10px] leading-none mt-0.5 ${isSelected ? "text-white/70" : "text-gray-400"}`}>
+                            {mm}
+                          </span>
+                        )}
+                        <span className={`text-[9px] font-medium mt-1 px-2 py-0.5 rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>
+                          Made to Order
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-100 px-5 py-4 bg-gray-50 flex-shrink-0">
+                <p className="text-xs text-gray-500 text-center leading-relaxed">
+                  Not sure about your size?{" "}
+                  <a
+                    href={`https://wa.me/916353974557?text=${encodeURIComponent("Hi! I need help finding my size for a Ruveri Jewel product.")}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="text-black font-semibold underline underline-offset-2"
+                  >
+                    Ask our expert on WhatsApp
+                  </a>
+                </p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
-/* ---------- PRICE BREAKDOWN COMPONENT ---------- */
+/* ---------- CONNECT WITH EXPERT ---------- */
+const ConnectWithExpert = ({ product }) => {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    const productUrl = window.location.href;
+    const message = `Hi! I would like to enquire about this product from Ruveri Jewel.\n\n*${product?.productName || "Product"}*\n${productUrl}\n\nCould you please help me with more details?`;
+    setUrl(`https://wa.me/916353974557?text=${encodeURIComponent(message)}`);
+  }, [product]);
+
+  if (!url) return null;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 border border-[#25D366] text-[#25D366] px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-[#25D366] hover:text-white transition-all duration-200 whitespace-nowrap flex-shrink-0"
+    >
+      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+      </svg>
+      Connect with Expert
+    </a>
+  );
+};
+
+/* ---------- PRICE BREAKDOWN ---------- */
 const PriceBreakdown = ({ product }) => {
   const [openBreakdown, setOpenBreakdown] = useState(false);
   if (!product) return null;
-
   const isSilver = product.metal === "silver";
 
-  // ── Silver: flat price, no formula ──────────────────────────────────────
   if (isSilver) {
     const totalPrice = Number(product.metalPrice) || 0;
     return (
       <div className="mt-4">
-        <button
-          onClick={() => setOpenBreakdown(!openBreakdown)}
-          className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={() => setOpenBreakdown(!openBreakdown)}
+          className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors">
           <span className="text-base sm:text-lg font-medium">Price Breakdown</span>
           <span className="text-xl sm:text-2xl">{openBreakdown ? "−" : "+"}</span>
         </button>
         {openBreakdown && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden">
             <div className="py-6 space-y-4">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -158,7 +269,6 @@ const PriceBreakdown = ({ product }) => {
                 </table>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <h5 className="text-sm font-medium text-blue-800 mb-2">Important Notes:</h5>
                 <ul className="text-xs text-blue-700 space-y-1">
                   <li>• Price includes all charges (making, GST, etc.)</li>
                   <li>• BIS Hallmarked — {product.purity} certified silver</li>
@@ -172,7 +282,6 @@ const PriceBreakdown = ({ product }) => {
     );
   }
 
-  // ── Gold: full formula breakdown ─────────────────────────────────────────
   const netWeight = Number(product.netWeight) || 0;
   const metalPrice = Number(product.metalPrice) || 0;
   const makingCharges = Number(product.makingCharges) || 0;
@@ -187,28 +296,20 @@ const PriceBreakdown = ({ product }) => {
 
   return (
     <div className="mt-4">
-      <button
-        onClick={() => setOpenBreakdown(!openBreakdown)}
-        className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors"
-      >
+      <button onClick={() => setOpenBreakdown(!openBreakdown)}
+        className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors">
         <span className="text-base sm:text-lg font-medium">Price Breakdown</span>
         <span className="text-xl sm:text-2xl">{openBreakdown ? "−" : "+"}</span>
       </button>
       {openBreakdown && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="overflow-hidden">
           <div className="py-6 space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-black mb-3">How we calculate the price:</h4>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 mb-2">
                 Total Price = (Net Weight × Metal Price of <strong>pure metal</strong> × Purity Multiplier) + Diamond Price + Making Charges (includes GST)
               </p>
-              <p className="text-xs text-gray-500">
-                <em>Purity Multiplier converts pure metal price (24K gold) to the actual product purity</em>
-              </p>
+              <p className="text-xs text-gray-500"><em>Purity Multiplier converts pure metal price (24K gold) to the actual product purity</em></p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -225,14 +326,10 @@ const PriceBreakdown = ({ product }) => {
                       <div className="font-medium">Metal Cost</div>
                       <div className="text-xs text-gray-500">
                         {product.metal.charAt(0).toUpperCase() + product.metal.slice(1)} ({product.purity})
-                        <span className="block text-xs text-gray-400">
-                          Price for pure 24K gold, converted via Purity Multiplier ({purityMultiplier})
-                        </span>
+                        <span className="block text-xs text-gray-400">Converted via Purity Multiplier ({purityMultiplier})</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {netWeight}g × ₹{metalPrice.toLocaleString()}/g × {purityMultiplier}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{netWeight}g × ₹{metalPrice.toLocaleString()}/g × {purityMultiplier}</td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">₹{Math.ceil(metalCost).toLocaleString()}</td>
                   </tr>
                   <tr>
@@ -254,14 +351,8 @@ const PriceBreakdown = ({ product }) => {
                   <tr className="bg-gray-50">
                     <td colSpan="3" className="px-4 py-3 text-sm text-gray-600">
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-gray-500">Making Charges (before GST):</span>
-                          <span className="font-medium ml-1">₹{Math.ceil(makingChargesWithoutGST).toLocaleString()}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">GST @3%:</span>
-                          <span className="font-medium ml-1">₹{Math.ceil(gstOnMakingCharges).toLocaleString()}</span>
-                        </div>
+                        <div><span className="text-gray-500">Making Charges (before GST):</span><span className="font-medium ml-1">₹{Math.ceil(makingChargesWithoutGST).toLocaleString()}</span></div>
+                        <div><span className="text-gray-500">GST @3%:</span><span className="font-medium ml-1">₹{Math.ceil(gstOnMakingCharges).toLocaleString()}</span></div>
                       </div>
                     </td>
                   </tr>
@@ -274,7 +365,6 @@ const PriceBreakdown = ({ product }) => {
               </table>
             </div>
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h5 className="text-sm font-medium text-blue-800 mb-2">Important Notes:</h5>
               <ul className="text-xs text-blue-700 space-y-1">
                 <li>• Metal price is based on current market rates (updated daily)</li>
                 <li>• Making charges include GST as per government regulations</li>
@@ -322,8 +412,7 @@ const UpdatedReviewForm = ({ productId }) => {
         setReviews([data.review, ...reviews]);
         setNewReview(""); setRating(5);
       }
-    } catch (error) { console.error("Error submitting review:", error); }
-    finally { setLoading(false); }
+    } catch { } finally { setLoading(false); }
   };
 
   return (
@@ -340,12 +429,9 @@ const UpdatedReviewForm = ({ productId }) => {
             ))}
             <span className="ml-2 text-sm text-gray-600">{rating}.0</span>
           </div>
-          <textarea
-            value={newReview} onChange={(e) => setNewReview(e.target.value)}
+          <textarea value={newReview} onChange={(e) => setNewReview(e.target.value)}
             placeholder="Share your thoughts about this product..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent h-32 resize-none"
-            maxLength={500}
-          />
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent h-32 resize-none" maxLength={500} />
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-500">{newReview.length}/500 characters</span>
             <button type="submit" disabled={loading || !newReview.trim()}
@@ -355,7 +441,6 @@ const UpdatedReviewForm = ({ productId }) => {
           </div>
         </form>
       </div>
-
       {reviews.length > 0 ? (
         <div className="space-y-6">
           {reviews.map((review) => (
@@ -380,21 +465,15 @@ const UpdatedReviewForm = ({ productId }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No reviews yet. Be the first to review!</p>
-        </div>
+        <div className="text-center py-8"><p className="text-gray-600">No reviews yet. Be the first to review!</p></div>
       )}
-
       {loginPrompt && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-white w-full max-w-md p-8 relative">
-            <button onClick={() => setLoginPrompt(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white w-full max-w-md p-8 relative">
+            <button onClick={() => setLoginPrompt(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><XMarkIcon className="w-6 h-6" /></button>
             <h2 className="text-2xl font-bold mb-2">Login Required</h2>
             <p className="text-gray-600 mb-6">Please login to submit a review.</p>
-            <button onClick={async () => { try { await loginWithGoogle(); setLoginPrompt(false); } catch (e) { console.error(e); } }}
+            <button onClick={async () => { try { await loginWithGoogle(); setLoginPrompt(false); } catch { } }}
               className="w-full bg-black text-white py-4 flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -411,7 +490,7 @@ const UpdatedReviewForm = ({ productId }) => {
   );
 };
 
-/* ---------- MAIN COMPONENT ---------- */
+/* ═══════════════════ MAIN COMPONENT ═══════════════════ */
 export default function ProductDetail() {
   const { slug } = useParams();
   const router = useRouter();
@@ -428,7 +507,6 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(0);
   const [loginPrompt, setLoginPrompt] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
-
   const [selectedSize, setSelectedSize] = useState("");
   const [sizeError, setSizeError] = useState(false);
 
@@ -448,162 +526,99 @@ export default function ProductDetail() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/products/fetch/${slug}`, {
-          headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY },
-        });
+        const res = await fetch(`/api/products/fetch/${slug}`, { headers: { "x-api-key": process.env.NEXT_PUBLIC_API_KEY } });
         if (!res.ok) throw new Error(`Failed to fetch product: ${res.status}`);
         const data = await res.json();
         setProduct(data);
         setMainImage(data.img1 || "/placeholder.jpg");
-      } catch (err) {
-        console.error("Error fetching product:", err);
-        setError(err.message || "Failed to load product");
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { setError(err.message || "Failed to load product"); }
+      finally { setLoading(false); }
     };
     if (slug) fetchProduct();
   }, [slug]);
 
   useEffect(() => {
-    const cachedWishlist = localStorage.getItem("wishlist");
-    if (cachedWishlist) {
-      try { setWishlist(JSON.parse(cachedWishlist).map(id => String(id))); }
-      catch (e) { console.error("Error parsing wishlist:", e); }
-    }
-    const cartItem = cart[slug];
-    setQuantity(cartItem?.quantity || 0);
+    const cached = localStorage.getItem("wishlist");
+    if (cached) { try { setWishlist(JSON.parse(cached).map(id => String(id))); } catch { } }
+    setQuantity(cart[slug]?.quantity || 0);
   }, [cart, slug]);
 
   const handleShare = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({ title: product?.productName, text: `Check out ${product?.productName}`, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        setShareSuccess(true);
-        setTimeout(() => setShareSuccess(false), 2000);
-      }
-    } catch (err) { console.error("Share failed:", err); }
+      if (navigator.share) await navigator.share({ title: product?.productName, url: window.location.href });
+      else { await navigator.clipboard.writeText(window.location.href); setShareSuccess(true); setTimeout(() => setShareSuccess(false), 2000); }
+    } catch { }
   };
 
   const toggleWishlist = async () => {
     const user = getLoggedInUser();
-    if (!user?.email) {
-      try { await loginWithGoogle(); if (!getLoggedInUser()?.email) return; }
-      catch (error) { console.error("Login failed:", error); return; }
-    }
+    if (!user?.email) { try { await loginWithGoogle(); if (!getLoggedInUser()?.email) return; } catch { return; } }
     const idStr = String(slug);
-    const isInWishlist = wishlist.includes(idStr);
-    const updatedWishlist = isInWishlist ? wishlist.filter(id => id !== idStr) : [...wishlist, idStr];
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    const inWl = wishlist.includes(idStr);
+    const next = inWl ? wishlist.filter(id => id !== idStr) : [...wishlist, idStr];
+    setWishlist(next); localStorage.setItem("wishlist", JSON.stringify(next));
     try {
       const res = await fetch("/api/wishlist", {
-        method: isInWishlist ? "DELETE" : "POST",
+        method: inWl ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userEmail: getLoggedInUser().email, productId: slug }),
       });
       if (!res.ok) { setWishlist(wishlist); localStorage.setItem("wishlist", JSON.stringify(wishlist)); }
-    } catch (error) {
-      console.error("Wishlist update error:", error);
-      setWishlist(wishlist); localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    }
+    } catch { setWishlist(wishlist); localStorage.setItem("wishlist", JSON.stringify(wishlist)); }
   };
 
-  const buildCartItem = (productData, price) => ({
-    id: productData._id || slug,
-    productName: productData.productName,
-    quantity: 1,
-    price,
-    image: productData.img1,
-    metal: productData.metal,
-    purity: productData.purity,
-    weight: productData.netWeight,
-    size: selectedSize || null,
-    description: productData.description,
-    category: productData.category,
-    grossWeight: productData.grossWeight,
-    makingCharges: productData.makingCharges,
-    metalPrice: productData.metalPrice,
-    color: productData.color,
-    gender: productData.gender,
-    status: productData.status,
+  const buildCartItem = (p, price) => ({
+    id: p._id || slug, productName: p.productName, quantity: 1, price,
+    image: p.img1, metal: p.metal, purity: p.purity, weight: p.netWeight,
+    size: selectedSize || null, description: p.description, category: p.category,
+    grossWeight: p.grossWeight, makingCharges: p.makingCharges, metalPrice: p.metalPrice,
+    color: p.color, gender: p.gender, status: p.status,
   });
 
   const handleAddToCart = async () => {
     if (!validateSize()) return;
     const user = getLoggedInUser();
-    if (!user?.email) {
-      try {
-        await loginWithGoogle();
-        if (!getLoggedInUser()?.email) { setLoginPrompt(true); return; }
-      } catch (error) { console.error("Login failed:", error); setLoginPrompt(true); return; }
-    }
-    if (!product) return;
-    if (quantity === 0) {
-      addToCart(product._id || slug, buildCartItem(product, calculateTotalPrice(product)));
-      setQuantity(1);
-    }
+    if (!user?.email) { try { await loginWithGoogle(); if (!getLoggedInUser()?.email) { setLoginPrompt(true); return; } } catch { setLoginPrompt(true); return; } }
+    if (!product || quantity > 0) return;
+    addToCart(product._id || slug, buildCartItem(product, calculateTotalPrice(product))); setQuantity(1);
   };
 
   const handleBuyNow = async () => {
     if (!validateSize()) return;
     const user = getLoggedInUser();
-    if (!user?.email) {
-      try {
-        await loginWithGoogle();
-        if (!getLoggedInUser()?.email) { setLoginPrompt(true); return; }
-      } catch (error) { console.error("Login failed:", error); setLoginPrompt(true); return; }
-    }
+    if (!user?.email) { try { await loginWithGoogle(); if (!getLoggedInUser()?.email) { setLoginPrompt(true); return; } } catch { setLoginPrompt(true); return; } }
     if (!product) return;
-    if (quantity === 0) {
-      addToCart(product._id || slug, buildCartItem(product, calculateTotalPrice(product)));
-      setQuantity(1);
-    }
+    if (quantity === 0) { addToCart(product._id || slug, buildCartItem(product, calculateTotalPrice(product))); setQuantity(1); }
     setTimeout(() => setShowCheckoutPopup(true), 100);
   };
 
-  const increaseQuantity = () => {
-    if (!product) return;
-    const productId = product._id || slug;
-    const newQty = quantity + 1;
-    updateQuantity(productId, newQty); setQuantity(newQty);
-  };
-
+  const increaseQuantity = () => { if (!product) return; const id = product._id || slug; updateQuantity(id, quantity + 1); setQuantity(q => q + 1); };
   const decreaseQuantity = () => {
-    if (!product) return;
-    const productId = product._id || slug;
-    if (quantity > 1) { updateQuantity(productId, quantity - 1); setQuantity(quantity - 1); }
-    else { updateQuantity(productId, 0); setQuantity(0); }
+    if (!product) return; const id = product._id || slug;
+    if (quantity > 1) { updateQuantity(id, quantity - 1); setQuantity(q => q - 1); }
+    else { updateQuantity(id, 0); setQuantity(0); }
   };
 
-  if (loading) {
-    return (
-      <div className="bg-back min-h-screen ci">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 grid lg:grid-cols-2 gap-12 pt-4">
-          <div className="space-y-4">
-            <div className="w-full h-[400px] md:h-[520px] bg-gray-200 animate-pulse rounded-lg" />
-            <div className="flex gap-3">{[...Array(3)].map((_, i) => <div key={i} className="w-24 h-24 bg-gray-200 animate-pulse rounded" />)}</div>
-          </div>
-          <div className="space-y-6">
-            {[32, 48, 40, 128, 56].map((h, i) => <div key={i} className={`h-${h} bg-gray-200 animate-pulse rounded`} style={{ height: h }} />)}
-          </div>
+  if (loading) return (
+    <div className="bg-back min-h-screen ci">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 grid lg:grid-cols-2 gap-12 pt-4">
+        <div className="space-y-4">
+          <div className="w-full h-[400px] md:h-[520px] bg-gray-200 animate-pulse rounded-lg" />
+          <div className="flex gap-3">{[...Array(3)].map((_, i) => <div key={i} className="w-24 h-24 bg-gray-200 animate-pulse rounded" />)}</div>
         </div>
+        <div className="space-y-6">{[32, 48, 40, 128, 56].map((h, i) => <div key={i} className="bg-gray-200 animate-pulse rounded" style={{ height: h }} />)}</div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !product) {
-    return (
-      <div className="bg-back min-h-screen ci flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-2xl font-bold text-black mb-4">Product Not Found</h2>
-          <button onClick={() => router.push("/")} className="px-6 py-3 bg-black text-white hover:bg-gray-900 transition-colors">Browse Products</button>
-        </div>
+  if (error || !product) return (
+    <div className="bg-back min-h-screen ci flex items-center justify-center">
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold text-black mb-4">Product Not Found</h2>
+        <button onClick={() => router.push("/")} className="px-6 py-3 bg-black text-white hover:bg-gray-900 transition-colors">Browse Products</button>
       </div>
-    );
-  }
+    </div>
+  );
 
   const isSilver = product.metal === "silver";
   const allImages = [product.img1, product.img2, product.img3].filter(Boolean);
@@ -613,54 +628,45 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-back min-h-screen ci px-2 sm:px-4">
-      {/* BACK BUTTON */}
-      <button
-        onClick={() => router.back()}
-        className="fixed top-4 left-2 sm:top-6 sm:left-4 z-10 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-black text-sm hover:bg-white transition-colors shadow-lg rounded-lg"
-      >
+      <button onClick={() => router.back()}
+        className="fixed top-4 left-2 sm:top-6 sm:left-4 z-10 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-black text-sm hover:bg-white transition-colors shadow-lg rounded-lg">
         ← Back
       </button>
 
-      {/* MAIN CONTENT */}
       <div className="max-w-7xl mx-auto py-8 md:py-12 grid lg:grid-cols-2 gap-6 md:gap-16 pt-4 md:pt-4">
 
-        {/* IMAGES SECTION */}
+        {/* ── IMAGES ── */}
         <div className="relative">
-          {/* Desktop */}
           <div className="hidden lg:grid grid-cols-[3fr_1fr] gap-6">
             <div className="relative group">
               <img src={mainImage} alt={product.productName} className="w-full h-[520px] object-cover transition-transform duration-500 group-hover:scale-105" />
             </div>
             {allImages.length > 1 && (
               <div className="flex flex-col gap-4">
-                {allImages.map((img, index) => (
-                  <button key={index} onClick={() => setMainImage(img)}
+                {allImages.map((img, i) => (
+                  <button key={i} onClick={() => setMainImage(img)}
                     className={`h-[160px] overflow-hidden transition-all duration-300 ${mainImage === img ? 'ring-2 ring-black ring-offset-2' : 'opacity-80 hover:opacity-100'}`}>
-                    <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+                    <img src={img} alt={`Thumbnail ${i + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
                   </button>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Mobile */}
           <div className="lg:hidden space-y-4">
             <div className="relative group">
               <img src={mainImage} alt={product.productName} className="w-full h-[350px] sm:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105 rounded-lg" />
             </div>
             {allImages.length > 1 && (
               <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 px-1">
-                {allImages.map((img, index) => (
-                  <button key={index} onClick={() => setMainImage(img)}
+                {allImages.map((img, i) => (
+                  <button key={i} onClick={() => setMainImage(img)}
                     className={`flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden transition-all duration-300 rounded-md ${mainImage === img ? 'ring-2 ring-black ring-offset-1' : 'opacity-80 hover:opacity-100'}`}>
-                    <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
+                    <img src={img} alt={`Thumbnail ${i + 1}`} className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
                   </button>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Action Buttons */}
           <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 flex flex-col gap-2">
             <button onClick={toggleWishlist} className="p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors">
               {isInWishlist ? <HeartSolid className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-red-500" /> : <HeartOutline className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />}
@@ -669,15 +675,10 @@ export default function ProductDetail() {
               <ShareIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-black" />
             </button>
           </div>
-
-          {shareSuccess && (
-            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-black text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm animate-fade-in">
-              Link copied!
-            </div>
-          )}
+          {shareSuccess && <div className="absolute bottom-3 left-3 bg-black text-white px-3 py-1.5 rounded-lg text-xs">Link copied!</div>}
         </div>
 
-        {/* DETAILS SECTION */}
+        {/* ── DETAILS ── */}
         <div className="space-y-6 md:space-y-8 px-2 sm:px-0">
           <span className="inline-block border border-black px-3 py-1.5 text-xs tracking-wide">
             {product.category?.toUpperCase() || "JEWELRY"}
@@ -687,20 +688,22 @@ export default function ProductDetail() {
             {product.productName}
           </h1>
 
+          {/* ── Price + Connect with Expert (inline) ── */}
           <div className="space-y-1">
-            <p className="text-xl sm:text-2xl md:text-3xl font-medium text-black">
-              ₹{totalPrice.toLocaleString()}
-            </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <p className="text-xl sm:text-2xl md:text-3xl font-medium text-black">
+                ₹{totalPrice.toLocaleString()}
+              </p>
+              <ConnectWithExpert product={product} />
+            </div>
             <p className="text-xs sm:text-sm text-gray-600">
               {product.category === "bangles"
                 ? "Price is for 1 bangle (sold individually, not as a pair)"
-                : isSilver
-                  ? "Inclusive of all charges"
-                  : "Includes making charges"}
+                : isSilver ? "Inclusive of all charges" : "Includes making charges"}
             </p>
           </div>
 
-          {/* Product Specs — silver hides Net Weight & Diamond Price, shows Gross Weight & Purity */}
+          {/* Specs */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 py-4 sm:py-6 border-y border-gray-200">
             <div><p className="text-xs sm:text-sm text-gray-500">Metal</p><p className="font-medium capitalize text-sm sm:text-base">{product.metal}</p></div>
             <div><p className="text-xs sm:text-sm text-gray-500">Purity</p><p className="font-medium text-sm sm:text-base">{product.purity}</p></div>
@@ -717,7 +720,7 @@ export default function ProductDetail() {
             )}
           </div>
 
-          {/* SIZE SELECTOR */}
+          {/* ── SIZE SELECTOR ── */}
           <div id="size-selector">
             <SizeSelector
               category={product.category}
@@ -727,7 +730,7 @@ export default function ProductDetail() {
             />
           </div>
 
-          {/* ACTIONS */}
+          {/* ── ACTIONS ── */}
           <div className="space-y-4">
             {quantity > 0 ? (
               <div className="space-y-3">
@@ -749,17 +752,12 @@ export default function ProductDetail() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button onClick={handleAddToCart} className="bg-white border-2 border-black text-black py-3 text-base sm:text-lg hover:bg-black hover:text-white transition-all">
-                  Add to Cart
-                </button>
-                <button onClick={handleBuyNow} className="bg-black text-white py-3 text-base sm:text-lg hover:bg-gray-900 transition-colors">
-                  Buy Now
-                </button>
+                <button onClick={handleAddToCart} className="bg-white border-2 border-black text-black py-3 text-base sm:text-lg hover:bg-black hover:text-white transition-all">Add to Cart</button>
+                <button onClick={handleBuyNow} className="bg-black text-white py-3 text-base sm:text-lg hover:bg-gray-900 transition-colors">Buy Now</button>
               </div>
             )}
           </div>
 
-          {/* Quick Info */}
           <div className="pt-4 sm:pt-6 border-t border-gray-200">
             <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 text-center">
               <div><p className="text-xs sm:text-sm text-gray-500">Certified Quality</p><p className="text-xs text-gray-600">BIS Hallmarked</p></div>
@@ -770,7 +768,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* DETAILED INFORMATION */}
+      {/* Product Details accordion */}
       <div className="max-w-7xl mx-auto pb-4 md:pb-6 px-2 sm:px-4">
         <button onClick={() => setOpenInfo(!openInfo)} className="w-full flex justify-between items-center border-t border-b py-4 hover:bg-gray-50 transition-colors">
           <span className="text-base sm:text-lg font-medium">Product Details</span>
@@ -790,12 +788,10 @@ export default function ProductDetail() {
                 <div><p className="text-xs sm:text-sm text-gray-500">Gender</p><p className="font-medium text-sm sm:text-base capitalize">{product.gender}</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p><p className="font-medium text-sm sm:text-base">{product.diamondWeight} CT</p></div>
-                {/* Hide net weight, diamond weight, making charges for silver */}
                 {!isSilver && (
                   <>
                     <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
                     <div><p className="text-xs sm:text-sm text-gray-500">Making Charges</p><p className="font-medium text-sm sm:text-base">₹{product.makingCharges?.toLocaleString() || 0}</p></div>
-                    
                   </>
                 )}
               </div>
@@ -804,24 +800,17 @@ export default function ProductDetail() {
         )}
       </div>
 
-      {/* PRICE BREAKDOWN */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
-        <PriceBreakdown product={product} />
-      </div>
+      <div className="max-w-7xl mx-auto px-2 sm:px-4"><PriceBreakdown product={product} /></div>
+      <div className="max-w-7xl mx-auto pb-8 md:pb-12 px-2 sm:px-4 mt-8"><UpdatedReviewForm productId={productId} /></div>
 
-      {/* REVIEWS */}
-      <div className="max-w-7xl mx-auto pb-8 md:pb-12 px-2 sm:px-4 mt-8">
-        <UpdatedReviewForm productId={productId} />
-      </div>
-
-      {/* LOGIN PROMPT */}
+      {/* Login prompt */}
       {loginPrompt && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white w-full max-w-md p-6 md:p-8 relative">
             <button onClick={() => setLoginPrompt(false)} className="absolute top-4 right-4 text-gray-500 hover:text-black"><XMarkIcon className="w-6 h-6" /></button>
             <h2 className="text-xl md:text-2xl font-bold mb-2">Login Required</h2>
             <p className="text-gray-600 mb-6">Please login to add items to your cart or proceed to checkout.</p>
-            <button onClick={async () => { try { await loginWithGoogle(); setLoginPrompt(false); } catch (e) { console.error(e); } }}
+            <button onClick={async () => { try { await loginWithGoogle(); setLoginPrompt(false); } catch { } }}
               className="w-full bg-black text-white py-3 md:py-4 flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -835,7 +824,7 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* CHECKOUT POPUP */}
+      {/* Checkout popup */}
       {showCheckoutPopup && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">

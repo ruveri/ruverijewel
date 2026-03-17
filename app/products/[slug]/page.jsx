@@ -789,12 +789,13 @@ export default function ProductDetail() {
                 <div><p className="text-xs sm:text-sm text-gray-500">Color</p><p className="font-medium text-sm sm:text-base capitalize">{product.color || "Classic"}</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Gender</p><p className="font-medium text-sm sm:text-base capitalize">{product.gender}</p></div>
                 <div><p className="text-xs sm:text-sm text-gray-500">Gross Weight</p><p className="font-medium text-sm sm:text-base">{product.grossWeight}g</p></div>
+                <div><p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p><p className="font-medium text-sm sm:text-base">{product.diamondWeight} CT</p></div>
                 {/* Hide net weight, diamond weight, making charges for silver */}
                 {!isSilver && (
                   <>
                     <div><p className="text-xs sm:text-sm text-gray-500">Net Weight</p><p className="font-medium text-sm sm:text-base">{product.netWeight}g</p></div>
                     <div><p className="text-xs sm:text-sm text-gray-500">Making Charges</p><p className="font-medium text-sm sm:text-base">₹{product.makingCharges?.toLocaleString() || 0}</p></div>
-                    <div><p className="text-xs sm:text-sm text-gray-500">Diamond Weight</p><p className="font-medium text-sm sm:text-base">{product.diamondWeight} CT</p></div>
+                    
                   </>
                 )}
               </div>

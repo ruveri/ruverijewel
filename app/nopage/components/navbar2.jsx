@@ -20,6 +20,7 @@ export default function Navbar() {
         { href: "/necklace", label: "NECKLACE" },
         { href: "/pendents", label: "PENDENTS" },
         { href: "/mencollections", label: "MEN COLLECTION" },
+        { href: "/kidscollections", label: "KIDS COLLECTION" },
     ];
 
     /* 🔹 Animation Variants */

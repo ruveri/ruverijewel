@@ -162,7 +162,7 @@ export default function AboutPage() {
             <div className="relative">
               <div className="photo-box w-full hover-lift" style={{ height: "600px" }}>
                 {/* Replace with your actual photo path */}
-                <img src="/jewelry/h1.jpg" alt="Ruveri jewellery craftsmanship" />
+                <img src="/jewelry/h1.JPG" alt="Ruveri jewellery craftsmanship" />
                 <div className="photo-label">Your Photo Here</div>
               </div>
               <div className="absolute -bottom-4 -right-4 w-32 h-32 border border-[#c9a96e]/20 pointer-events-none" />
